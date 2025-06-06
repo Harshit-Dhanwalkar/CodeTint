@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <tree_sitter/api.h>
 
-// Declare external Tree-sitter language functions
+// External Tree-sitter language functions
 const TSLanguage *tree_sitter_python(void);
 const TSLanguage *tree_sitter_c(void);
 const TSLanguage *tree_sitter_cpp(void);
@@ -12,27 +12,26 @@ const TSLanguage *tree_sitter_javascript(void);
 const TSLanguage *tree_sitter_html(void);
 const TSLanguage *tree_sitter_css(void);
 
-// Structure to hold language information and its associated parser and default query
+// Structure to hold language information and associated parser and default query
 typedef struct {
     const char *name;
     const char *extension;
     const TSLanguage *(*language_function)(void);
-    const char *default_query_path; // Path to default .scm query file for this language
+    const char *default_query_path;
 } LanguageInfo;
 
-// Define supported languages and their properties
 LanguageInfo supported_languages[] = {
     {"python", ".py", tree_sitter_python, "queries/python.scm"},
     {"c",      ".c",  tree_sitter_c,      "queries/c.scm"},
-    {"cpp",    ".cpp", tree_sitter_cpp,   "queries/cpp.scm"},
+    {"cpp",    ".cpp", tree_sitter_cpp,    "queries/cpp.scm"},
     {"javascript", ".js", tree_sitter_javascript, "queries/javascript.scm"},
-    {"html",   ".html", tree_sitter_html,     "queries/html.scm"},
-    {"css",    ".css", tree_sitter_css,      "queries/css.scm"},
+    {"html",   ".html", tree_sitter_html,   "queries/html.scm"},
+    {"css",    ".css", tree_sitter_css,    "queries/css.scm"},
     {NULL, NULL, NULL, NULL} // Sentinel to mark the end of the array
 };
 
 
-// Predefined color themes
+// Color themes
 typedef struct {
     const char *name;
     const char *function_builtin;
@@ -45,177 +44,190 @@ typedef struct {
     const char *variable;
     const char *constant;
     const char *literal;
+    const char *line_number; // Added for themed line numbers
     const char *reset;
 } ColorTheme;
 
 ColorTheme themes[] = {
     {
         "default",
-        "\x1b[35m", // function.builtin - magenta
-        "\x1b[34m", // function - blue
-        "\x1b[32m", // string - green
-        "\x1b[90m", // comment - bright black
-        "\x1b[31m", // keyword - red
-        "\x1b[31;1m", // keyword.control - bright red/bold
-        "\x1b[36m", // type - cyan
-        "\x1b[33m", // variable - yellow
-        "\x1b[35;1m", // constant - bright magenta
-        "\x1b[32;1m", // literal - bright green
-        "\x1b[0m"    // reset
+        "\x1b[35m",     // function.builtin
+        "\x1b[34m",     // function
+        "\x1b[32m",     // string
+        "\x1b[90m",     // comment
+        "\x1b[31m",     // keyword
+        "\x1b[31;1m",   // keyword.control
+        "\x1b[36m",     // type
+        "\x1b[33m",     // variable
+        "\x1b[35;1m",   // constant
+        "\x1b[32;1m",   // literal
+        "\x1b[90m",     // line_number (Bright Black/Gray)
+        "\x1b[0m"       // reset
     },
     {
         "gruvbox",
-        "\x1b[38;5;142m", // function.builtin - gruvbox aqua
-        "\x1b[38;5;109m", // function - gruvbox blue
-        "\x1b[38;5;108m", // string - gruvbox green
-        "\x1b[38;5;245m", // comment - gruvbox gray
-        "\x1b[38;5;167m", // keyword - gruvbox red
-        "\x1b[38;5;167;1m", // keyword.control - gruvbox red bold
-        "\x1b[38;5;142m", // type - gruvbox yellow
-        "\x1b[38;5;223m", // variable - gruvbox fg
-        "\x1b[38;5;175m", // constant - gruvbox purple
-        "\x1b[38;5;208m", // literal - gruvbox orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;142m", // function.builtin
+        "\x1b[38;5;109m", // function
+        "\x1b[38;5;108m", // string
+        "\x1b[38;5;245m", // comment
+        "\x1b[38;5;167m", // keyword
+        "\x1b[38;5;167;1m",// keyword.control
+        "\x1b[38;5;142m", // type
+        "\x1b[38;5;223m", // variable
+        "\x1b[38;5;175m", // constant
+        "\x1b[38;5;208m", // literal
+        "\x1b[38;5;245m", // line_number (Gruvbox Gray)
+        "\x1b[0m"       // reset
     },
     {
         "tokyonight-night",
-        "\x1b[38;5;73m",  // function.builtin - teal
-        "\x1b[38;5;110m", // function - blue
-        "\x1b[38;5;158m", // string - green
-        "\x1b[38;5;102m", // comment - comment gray
-        "\x1b[38;5;175m", // keyword - magenta
-        "\x1b[38;5;175;1m", // keyword.control - magenta bold
-        "\x1b[38;5;117m", // type - cyan
-        "\x1b[38;5;188m", // variable - fg
-        "\x1b[38;5;215m", // constant - orange
-        "\x1b[38;5;215m", // literal - orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;73m",  // function.builtin
+        "\x1b[38;5;110m", // function
+        "\x1b[38;5;158m", // string
+        "\x1b[38;5;102m", // comment
+        "\x1b[38;5;175m", // keyword
+        "\x1b[38;5;175;1m",// keyword.control
+        "\x1b[38;5;117m", // type
+        "\x1b[38;5;188m", // variable
+        "\x1b[38;5;215m", // constant
+        "\x1b[38;5;215m", // literal
+        "\x1b[38;5;102m", // line_number (Comment Gray)
+        "\x1b[0m"       // reset
     },
     {
         "tokyonight-storm",
-        "\x1b[38;5;73m",  // function.builtin - teal
-        "\x1b[38;5;75m",  // function - blue
-        "\x1b[38;5;114m", // string - green
-        "\x1b[38;5;102m", // comment - comment gray
-        "\x1b[38;5;176m", // keyword - purple
-        "\x1b[38;5;176;1m", // keyword.control - purple bold
-        "\x1b[38;5;117m", // type - cyan
-        "\x1b[38;5;188m", // variable - fg
-        "\x1b[38;5;215m", // constant - orange
-        "\x1b[38;5;215m", // literal - orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;73m",  // function.builtin
+        "\x1b[38;5;75m",  // function
+        "\x1b[38;5;114m", // string
+        "\x1b[38;5;102m", // comment
+        "\x1b[38;5;176m", // keyword
+        "\x1b[38;5;176;1m",// keyword.control
+        "\x1b[38;5;117m", // type
+        "\x1b[38;5;188m", // variable
+        "\x1b[38;5;215m", // constant
+        "\x1b[38;5;215m", // literal
+        "\x1b[38;5;102m", // line_number (Comment Gray)
+        "\x1b[0m"       // reset
     },
     {
         "catppuccin-mocha",
-        "\x1b[38;5;117m", // function.builtin - sky
-        "\x1b[38;5;75m",  // function - blue
-        "\x1b[38;5;114m", // string - green
-        "\x1b[38;5;102m", // comment - overlay1
-        "\x1b[38;5;176m", // keyword - mauve
-        "\x1b[38;5;176;1m", // keyword.control - mauve bold
-        "\x1b[38;5;117m", // type - sky
-        "\x1b[38;5;188m", // variable - text
-        "\x1b[38;5;215m", // constant - peach
-        "\x1b[38;5;215m", // literal - peach
-        "\x1b[0m"    // reset
+        "\x1b[38;5;117m", // function.builtin
+        "\x1b[38;5;75m",  // function
+        "\x1b[38;5;114m", // string
+        "\x1b[38;5;102m", // comment
+        "\x1b[38;5;176m", // keyword
+        "\x1b[38;5;176;1m",// keyword.control
+        "\x1b[38;5;117m", // type
+        "\x1b[38;5;188m", // variable
+        "\x1b[38;5;215m", // constant
+        "\x1b[38;5;215m", // literal
+        "\x1b[38;5;102m", // line_number (Overlay1)
+        "\x1b[0m"       // reset
     },
     {
         "dracula",
-        "\x1b[38;5;141m", // function.builtin - purple
-        "\x1b[38;5;117m", // function - cyan
-        "\x1b[38;5;228m", // string - yellow
-        "\x1b[38;5;102m", // comment - comment
-        "\x1b[38;5;212m", // keyword - pink
-        "\x1b[38;5;212;1m", // keyword.control - pink bold
-        "\x1b[38;5;117m", // type - cyan
-        "\x1b[38;5;255m", // variable - foreground
-        "\x1b[38;5;141m", // constant - purple
-        "\x1b[38;5;215m", // literal - orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;141m", // function.builtin
+        "\x1b[38;5;117m", // function
+        "\x1b[38;5;228m", // string
+        "\x1b[38;5;102m", // comment
+        "\x1b[38;5;212m", // keyword
+        "\x1b[38;5;212;1m",// keyword.control
+        "\x1b[38;5;117m", // type
+        "\x1b[38;5;255m", // variable
+        "\x1b[38;5;141m", // constant
+        "\x1b[38;5;215m", // literal
+        "\x1b[38;5;102m", // line_number (Comment Gray)
+        "\x1b[0m"       // reset
     },
     {
         "nord",
-        "\x1b[38;5;116m", // function.builtin - frost3
-        "\x1b[38;5;81m",  // function - frost2
-        "\x1b[38;5;108m", // string - aurora green
-        "\x1b[38;5;59m",  // comment - polar night3
-        "\x1b[38;5;81m",  // keyword - frost2
-        "\x1b[38;5;81;1m", // keyword.control - frost2 bold
-        "\x1b[38;5;116m", // type - frost3
-        "\x1b[38;5;188m", // variable - snow storm1
-        "\x1b[38;5;180m", // constant - aurora yellow
-        "\x1b[38;5;209m", // literal - aurora orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;116m", // function.builtin
+        "\x1b[38;5;81m",  // function
+        "\x1b[38;5;108m", // string
+        "\x1b[38;5;59m",  // comment
+        "\x1b[38;5;81m",  // keyword
+        "\x1b[38;5;81;1m",// keyword.control
+        "\x1b[38;5;116m", // type
+        "\x1b[38;5;188m", // variable
+        "\x1b[38;5;180m", // constant
+        "\x1b[38;5;209m", // literal
+        "\x1b[38;5;59m",  // line_number (Polar Night 3)
+        "\x1b[0m"       // reset
     },
     {
         "solarized-dark",
-        "\x1b[38;5;37m",  // function.builtin - cyan
-        "\x1b[38;5;33m",  // function - blue
-        "\x1b[38;5;37m",  // string - cyan
-        "\x1b[38;5;240m", // comment - base01
-        "\x1b[38;5;64m",  // keyword - green
-        "\x1b[38;5;64;1m", // keyword.control - green bold
-        "\x1b[38;5;136m", // type - yellow
-        "\x1b[38;5;254m", // variable - base0
-        "\x1b[38;5;125m", // constant - magenta
-        "\x1b[38;5;166m", // literal - orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;37m",  // function.builtin
+        "\x1b[38;5;33m",  // function
+        "\x1b[38;5;37m",  // string
+        "\x1b[38;5;240m", // comment
+        "\x1b[38;5;64m",  // keyword
+        "\x1b[38;5;64;1m",// keyword.control
+        "\x1b[38;5;136m", // type
+        "\x1b[38;5;254m", // variable
+        "\x1b[38;5;125m", // constant
+        "\x1b[38;5;166m", // literal
+        "\x1b[38;5;240m", // line_number (Base01)
+        "\x1b[0m"       // reset
     },
     {
         "solarized-light",
-        "\x1b[38;5;37m",  // function.builtin - cyan
-        "\x1b[38;5;33m",  // function - blue
-        "\x1b[38;5;37m",  // string - cyan
-        "\x1b[38;5;244m", // comment - base1
-        "\x1b[38;5;64m",  // keyword - green
-        "\x1b[38;5;64;1m", // keyword.control - green bold
-        "\x1b[38;5;136m", // type - yellow
-        "\x1b[38;5;235m", // variable - base00
-        "\x1b[38;5;125m", // constant - magenta
-        "\x1b[38;5;166m", // literal - orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;37m",  // function.builtin
+        "\x1b[38;5;33m",  // function
+        "\x1b[38;5;37m",  // string
+        "\x1b[38;5;244m", // comment
+        "\x1b[38;5;64m",  // keyword
+        "\x1b[38;5;64;1m",// keyword.control
+        "\x1b[38;5;136m", // type
+        "\x1b[38;5;235m", // variable
+        "\x1b[38;5;125m", // constant
+        "\x1b[38;5;166m", // literal
+        "\x1b[38;5;244m", // line_number (Base1)
+        "\x1b[0m"       // reset
     },
     {
         "one-dark",
-        "\x1b[38;5;39m",  // function.builtin - cyan
-        "\x1b[38;5;75m",  // function - blue
-        "\x1b[38;5;114m", // string - green
-        "\x1b[38;5;59m",  // comment - comment gray
-        "\x1b[38;5;176m", // keyword - purple
-        "\x1b[38;5;176;1m", // keyword.control - purple bold
-        "\x1b[38;5;39m",  // type - cyan
-        "\x1b[38;5;145m", // variable - mono 1
-        "\x1b[38;5;215m", // constant - orange
-        "\x1b[38;5;215m", // literal - orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;39m",  // function.builtin
+        "\x1b[38;5;75m",  // function
+        "\x1b[38;5;114m", // string
+        "\x1b[38;5;59m",  // comment
+        "\x1b[38;5;176m", // keyword
+        "\x1b[38;5;176;1m",// keyword.control
+        "\x1b[38;5;39m",  // type
+        "\x1b[38;5;145m", // variable
+        "\x1b[38;5;215m", // constant
+        "\x1b[38;5;215m", // literal
+        "\x1b[38;5;59m",  // line_number (Comment Gray)
+        "\x1b[0m"       // reset
     },
     {
         "monokai",
-        "\x1b[38;5;81m",  // function.builtin - cyan
-        "\x1b[38;5;148m", // function - green
-        "\x1b[38;5;186m", // string - yellow
-        "\x1b[38;5;102m", // comment - comment
-        "\x1b[38;5;197m", // keyword - red
-        "\x1b[38;5;197;1m", // keyword.control - red bold
-        "\x1b[38;5;81m",  // type - cyan
-        "\x1b[38;5;255m", // variable - white
-        "\x1b[38;5;141m", // constant - purple
-        "\x1b[38;5;208m", // literal - orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;81m",  // function.builtin
+        "\x1b[38;5;148m", // function
+        "\x1b[38;5;186m", // string
+        "\x1b[38;5;102m", // comment
+        "\x1b[38;5;197m", // keyword
+        "\x1b[38;5;197;1m",// keyword.control
+        "\x1b[38;5;81m",  // type
+        "\x1b[38;5;255m", // variable
+        "\x1b[38;5;141m", // constant
+        "\x1b[38;5;208m", // literal
+        "\x1b[38;5;102m", // line_number (Comment)
+        "\x1b[0m"       // reset
     },
     {
         "github-dark",
-        "\x1b[38;5;117m", // function.builtin - blue
-        "\x1b[38;5;183m", // function - purple
-        "\x1b[38;5;150m", // string - teal
-        "\x1b[38;5;102m", // comment - gray
-        "\x1b[38;5;204m", // keyword - red
-        "\x1b[38;5;204;1m", // keyword.control - red bold
-        "\x1b[38;5;117m", // constant - blue
-        "\x1b[38;5;188m", // variable - fg default
-        "\x1b[38;5;117m", // constant - blue
-        "\x1b[38;5;215m", // literal - orange
-        "\x1b[0m"    // reset
+        "\x1b[38;5;117m", // function.builtin
+        "\x1b[38;5;183m", // function
+        "\x1b[38;5;150m", // string
+        "\x1b[38;5;102m", // comment
+        "\x1b[38;5;204m", // keyword
+        "\x1b[38;5;204;1m",// keyword.control
+        "\x1b[38;5;117m", // type
+        "\x1b[38;5;188m", // variable
+        "\x1b[38;5;117m", // constant
+        "\x1b[38;5;215m", // literal
+        "\x1b[38;5;102m", // line_number (Gray)
+        "\x1b[0m"       // reset
     }
 };
 
@@ -224,7 +236,6 @@ ColorTheme themes[] = {
 // Global selected theme pointer
 ColorTheme *selected_theme = NULL;
 
-// Get color by capture name for ANSI output
 const char *get_ansi_color(const char *capture_name) {
     if (strcmp(capture_name, "function.builtin") == 0) return selected_theme->function_builtin;
     if (strcmp(capture_name, "function") == 0) return selected_theme->function;
@@ -246,7 +257,6 @@ const char *get_ansi_color(const char *capture_name) {
     return selected_theme->reset; // default reset
 }
 
-// Get color by capture name for HTML output (CSS classes)
 const char *get_html_class(const char *capture_name) {
     if (strcmp(capture_name, "function.builtin") == 0) return "function-builtin";
     if (strcmp(capture_name, "function") == 0) return "function";
@@ -272,11 +282,12 @@ const char *get_html_class(const char *capture_name) {
 void print_usage(const char *progname) {
     fprintf(stderr, "Usage: %s [options] <file_path>\n", progname);
     fprintf(stderr, "Options:\n");
-    fprintf(stderr, "  -q FILE     Use external query file for highlights\n");
-    fprintf(stderr, "  -c THEME    Select color theme (default: default)\n");
-    fprintf(stderr, "  -l LANG     Explicitly set language (e.g., 'python', 'c', 'javascript'). Overrides file extension detection.\n");
-    fprintf(stderr, "  -o FILE     Output to file instead of stdout\n");
-    fprintf(stderr, "  --html      Output HTML instead of ANSI colors\n");
+    fprintf(stderr, "  -q FILE    Use external query file for highlights\n");
+    fprintf(stderr, "  -c THEME   Select color theme (default: default)\n");
+    fprintf(stderr, "  -l LANG    Explicitly set language (e.g., 'python', 'c', 'javascript'). Overrides file extension detection.\n");
+    fprintf(stderr, "  -o FILE    Output to file instead of stdout\n");
+    fprintf(stderr, "  --html     Output HTML instead of ANSI colors\n");
+    fprintf(stderr, "  -n, --line-numbers Show line numbers\n");
     fprintf(stderr, "Available themes: ");
     for (size_t i = 0; i < THEMES_COUNT; i++) {
         fprintf(stderr, "%s%s", themes[i].name, (i < THEMES_COUNT - 1) ? ", " : "\n");
@@ -287,7 +298,7 @@ void print_usage(const char *progname) {
     }
 }
 
-// Load the content of a file into a malloc'ed buffer, returns size via out_size
+// Load the content of a file into a malloc'ed buffer
 char *load_file(const char *filename, size_t *out_size) {
     FILE *fp = fopen(filename, "rb");
     if (!fp) return NULL;
@@ -341,6 +352,49 @@ LanguageInfo* get_language_info_from_name(const char* lang_name) {
     return NULL; // Language not found
 }
 
+// Helper function to print a section of text, handling line numbers and HTML escaping
+void print_code_section(FILE *out,
+                        const char *code_buffer,
+                        size_t start_byte,
+                        size_t end_byte, 
+                        bool show_line_numbers,
+                        int line_num_padding, 
+                        uint32_t *current_line_num_ptr,
+                        bool *at_line_start_ptr, 
+                        bool output_html
+                        ) {
+    for (size_t i = start_byte; i < end_byte; ++i) {
+        if (show_line_numbers && *at_line_start_ptr) {
+            if (output_html) {
+                fprintf(out, "<span class=\"line-number\">%*u</span>", line_num_padding, *current_line_num_ptr);
+            } else {
+                fprintf(out, "%s%*u │%s ",
+                    selected_theme->line_number,
+                    line_num_padding,
+                    *current_line_num_ptr,
+                    selected_theme->reset
+                );
+            }
+            *at_line_start_ptr = false;
+        }
+
+        char c = code_buffer[i];
+        if (output_html) {
+            if (c == '&') fputs("&amp;", out);
+            else if (c == '<') fputs("&lt;", out);
+            else if (c == '>') fputs("&gt;", out);
+            else fputc(c, out);
+        } else {
+            fputc(c, out);
+        }
+
+        if (c == '\n') {
+            (*current_line_num_ptr)++;
+            *at_line_start_ptr = true;
+        }
+    }
+}
+
 
 int main(int argc, char **argv) {
     const char *input_file = NULL;
@@ -348,7 +402,8 @@ int main(int argc, char **argv) {
     const char *output_file = NULL;
     const char *explicit_lang_name = NULL;
     bool output_html = false;
-    selected_theme = &themes[0]; // default theme
+    bool show_line_numbers = false;
+    selected_theme = &themes[0];
     
     LanguageInfo *current_lang_info = NULL;
 
@@ -378,7 +433,10 @@ int main(int argc, char **argv) {
             output_file = argv[++i];
         } else if (strcmp(argv[i], "--html") == 0) {
             output_html = true;
-        } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
+        } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--line-numbers") == 0) {
+            show_line_numbers = true;
+        }
+        else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
             print_usage(argv[0]);
             return 0;
         } else if (argv[i][0] == '-') {
@@ -395,7 +453,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Determine language: explicit -l flag takes precedence, then file extension
     if (explicit_lang_name) {
         current_lang_info = get_language_info_from_name(explicit_lang_name);
         if (!current_lang_info) {
@@ -412,7 +469,6 @@ int main(int argc, char **argv) {
             return 1;
         }
     }
-
 
     // Load source code
     size_t code_size;
@@ -433,7 +489,6 @@ int main(int argc, char **argv) {
             return 1;
         }
     } else {
-        // Load default query based on detected language
         if (current_lang_info->default_query_path) {
             size_t query_size;
             query_str = load_file(current_lang_info->default_query_path, &query_size);
@@ -458,7 +513,6 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    // Set language based on detected/explicit choice
     if (!ts_parser_set_language(parser, current_lang_info->language_function())) {
         fprintf(stderr, "Failed to set language for %s. Version mismatch?\n", current_lang_info->name);
         ts_parser_delete(parser);
@@ -478,7 +532,7 @@ int main(int argc, char **argv) {
     
     TSNode root = ts_tree_root_node(tree);
 
-    // Compile query using the selected language
+    // Compile query
     TSQueryError error_type;
     uint32_t error_offset;
     TSQuery *query = ts_query_new(current_lang_info->language_function(), query_str, strlen(query_str), &error_offset, &error_type);
@@ -521,18 +575,48 @@ int main(int argc, char **argv) {
     ts_query_cursor_exec(cursor, query, root);
 
     size_t current_byte = 0;
-    TSQueryMatch match; // <-- Declaration added here
+    TSQueryMatch match;
+
+    // Line number related variables
+    uint32_t current_line_num = 1;
+    bool at_line_start = true;
+
+    int line_num_padding = 0;
+    if (show_line_numbers) {
+        uint32_t total_lines = 1;
+        for (size_t i = 0; i < code_size; ++i) {
+            if (code[i] == '\n') {
+                total_lines++;
+            }
+        }
+        
+        char temp_buffer[16];
+        line_num_padding = snprintf(temp_buffer, sizeof(temp_buffer), "%u", total_lines);
+        if (line_num_padding < 4) line_num_padding = 4;
+    }
 
     if (output_html) {
-        // Print HTML header with dynamic CSS based on selected theme
         fprintf(out, "<!DOCTYPE html>\n<html><head><style>\n");
-
-        // Base styles
         fprintf(out, "body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; margin: 20px; }\n");
         fprintf(out, "pre { margin: 0; line-height: 1.4; }\n");
+        if (show_line_numbers) {
+            fprintf(out,
+                ".line-number { "
+                "color: #888; "
+                "text-align: right; "
+                "user-select: none; -webkit-user-select: none; "
+                "display: inline-block; "
+                "width: %dch; "
+                "padding-right: 1em; "
+                "margin-right: 1em; "
+                "border-right: 1px solid #555; "
+                "}\n",
+                line_num_padding
+            );
+            fprintf(out, "pre { display: flex; }\n");
+            fprintf(out, ".code-content { display: block; flex-grow: 1; }\n");
+        }
 
-        // Theme-specific styles (consider moving these to external CSS files for better modularity)
-        // For brevity, using the existing if-else if structure.
         if (strcmp(selected_theme->name, "gruvbox") == 0) {
             fprintf(out, "body { background: #282828; color: #ebdbb2; }\n");
             fprintf(out, ".function-builtin { color: #8ec07c; }\n");
@@ -545,18 +629,6 @@ int main(int argc, char **argv) {
             fprintf(out, ".variable { color: #ebdbb2; }\n");
             fprintf(out, ".constant { color: #d3869b; }\n");
             fprintf(out, ".literal { color: #fe8019; }\n");
-        } else if (strcmp(selected_theme->name, "tokyonight-night") == 0) {
-            fprintf(out, "body { background: #1a1b26; color: #c0caf5; }\n");
-            fprintf(out, ".function-builtin { color: #1abc9c; }\n");
-            fprintf(out, ".function { color: #7aa2f7; }\n");
-            fprintf(out, ".string { color: #9ece6a; }\n");
-            fprintf(out, ".comment { color: #565f89; font-style: italic; }\n");
-            fprintf(out, ".keyword { color: #bb9af7; }\n");
-            fprintf(out, ".keyword-control { color: #bb9af7; font-weight: bold; }\n");
-            fprintf(out, ".type { color: #2ac3de; }\n");
-            fprintf(out, ".variable { color: #c0caf5; }\n");
-            fprintf(out, ".constant { color: #ff9e64; }\n");
-            fprintf(out, ".literal { color: #ff9e64; }\n");
         } else if (strcmp(selected_theme->name, "dracula") == 0) {
             fprintf(out, "body { background: #282a36; color: #f8f8f2; }\n");
             fprintf(out, ".function-builtin { color: #bd93f9; }\n");
@@ -569,8 +641,7 @@ int main(int argc, char **argv) {
             fprintf(out, ".variable { color: #f8f8f2; }\n");
             fprintf(out, ".constant { color: #bd93f9; }\n");
             fprintf(out, ".literal { color: #ffb86c; }\n");
-        } else {
-            // Default theme (dark)
+        } else { // Default theme
             fprintf(out, "body { background: #1e1e1e; color: #d4d4d4; }\n");
             fprintf(out, ".function-builtin { color: #dcdcaa; }\n");
             fprintf(out, ".function { color: #569cd6; }\n");
@@ -584,12 +655,29 @@ int main(int argc, char **argv) {
             fprintf(out, ".literal { color: #b5cea8; }\n");
         }
         
-        fprintf(out, "</style></head><body><pre>\n");
+        fprintf(out, "</style></head><body><pre>");
+        if (show_line_numbers) {
+            fprintf(out, "<span class=\"code-content\">"); 
+        }
     }
 
     while (ts_query_cursor_next_match(cursor, &match)) {
+        TSQueryCapture sorted_captures[match.capture_count];
+        memcpy(sorted_captures, match.captures, match.capture_count * sizeof(TSQueryCapture));
+
         for (uint32_t i = 0; i < match.capture_count; i++) {
-            TSQueryCapture capture = match.captures[i];
+            for (uint32_t j = i + 1; j < match.capture_count; j++) {
+                if (ts_node_start_byte(sorted_captures[j].node) < ts_node_start_byte(sorted_captures[i].node)) {
+                    TSQueryCapture temp = sorted_captures[i];
+                    sorted_captures[i] = sorted_captures[j];
+                    sorted_captures[j] = temp;
+                }
+            }
+        }
+
+        for (uint32_t i = 0; i < match.capture_count; i++) {
+            TSQueryCapture capture = sorted_captures[i];
+            
             uint32_t name_len;
             const char *name = ts_query_capture_name_for_id(query, capture.index, &name_len);
             if (!name) continue;
@@ -597,80 +685,38 @@ int main(int argc, char **argv) {
             TSNode node = capture.node;
             uint32_t start = ts_node_start_byte(node);
             uint32_t end = ts_node_end_byte(node);
+            
+            if (start < current_byte) continue;
             if (start >= end || end > code_size) continue;
 
-            // Print non-highlighted text before this capture
-            if (start > current_byte) {
-                if (output_html) {
-                    for (size_t j = current_byte; j < start; j++) {
-                        char c = code[j];
-                        if (c == '&') fputs("&amp;", out);
-                        else if (c == '<') fputs("&lt;", out);
-                        else if (c == '>') fputs("&gt;", out);
-                        else fputc(c, out);
-                    }
-                } else {
-                    fwrite(code + current_byte, 1, start - current_byte, out);
-                }
+            print_code_section(out, code, current_byte, start, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
+
+            if (output_html) {
+                const char *cls = get_html_class(name);
+                if (cls) fprintf(out, "<span class=\"%s\">", cls);
+                print_code_section(out, code, start, end, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
+                if (cls) fprintf(out, "</span>");
+            } else {
+                fprintf(out, "%s", get_ansi_color(name));
+                print_code_section(out, code, start, end, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
+                fprintf(out, "%s", selected_theme->reset);
             }
-
-            // Determine the actual range to print for this highlight
-            // It should start from max(current_byte, start) to avoid reprinting
-            size_t print_start = (current_byte > start) ? current_byte : start;
-            size_t print_end = end;
-
-            // Only print if there's actual content to print for this highlight
-            if (print_start < print_end) {
-                if (output_html) {
-                    const char *cls = get_html_class(name);
-                    if (cls) fprintf(out, "<span class=\"%s\">", cls);
-
-                    // Print escaped code for the actual highlight range
-                    for (size_t j = print_start; j < print_end; j++) {
-                        char c = code[j];
-                        if (c == '&') fputs("&amp;", out);
-                        else if (c == '<') fputs("&lt;", out);
-                        else if (c == '>') fputs("&gt;", out);
-                        else fputc(c, out);
-                    }
-
-                    if (cls) fprintf(out, "</span>");
-                } else {
-                    // ANSI output
-                    fprintf(out, "%s", get_ansi_color(name));
-                    fwrite(code + print_start, 1, print_end - print_start, out);
-                    fprintf(out, "%s", selected_theme->reset);
-                }
-            }
-
-            // Update current_byte to the end of the *current* capture's range,
-            // only if it advances the overall progress.
-            if (end > current_byte) {
-                current_byte = end;
-            }
+            
+            current_byte = end;
         }
     }
 
-    // Print remaining text after the last highlight
     if (current_byte < code_size) {
-        if (output_html) {
-            for (size_t j = current_byte; j < code_size; j++) {
-                char c = code[j];
-                if (c == '&') fputs("&amp;", out);
-                else if (c == '<') fputs("&lt;", out);
-                else if (c == '>') fputs("&gt;", out);
-                else fputc(c, out);
-            }
-        } else {
-            fwrite(code + current_byte, 1, code_size - current_byte, out);
-        }
+        print_code_section(out, code, current_byte, code_size, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
     }
 
     if (output_html) {
+        if (show_line_numbers) {
+            fprintf(out, "</span>");
+        }
         fprintf(out, "</pre></body></html>\n");
     }
 
-    // Proper cleanup
     ts_query_cursor_delete(cursor);
     ts_query_delete(query);
     ts_tree_delete(tree);
