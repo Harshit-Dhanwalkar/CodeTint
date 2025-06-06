@@ -4,7 +4,33 @@
 #include <stdbool.h>
 #include <tree_sitter/api.h>
 
+// Declare external Tree-sitter language functions
 const TSLanguage *tree_sitter_python(void);
+const TSLanguage *tree_sitter_c(void);
+const TSLanguage *tree_sitter_cpp(void);
+const TSLanguage *tree_sitter_javascript(void);
+const TSLanguage *tree_sitter_html(void);
+const TSLanguage *tree_sitter_css(void);
+
+// Structure to hold language information and its associated parser and default query
+typedef struct {
+    const char *name;
+    const char *extension;
+    const TSLanguage *(*language_function)(void);
+    const char *default_query_path; // Path to default .scm query file for this language
+} LanguageInfo;
+
+// Define supported languages and their properties
+LanguageInfo supported_languages[] = {
+    {"python", ".py", tree_sitter_python, "queries/python.scm"},
+    {"c",      ".c",  tree_sitter_c,      "queries/c.scm"},
+    {"cpp",    ".cpp", tree_sitter_cpp,   "queries/cpp.scm"},
+    {"javascript", ".js", tree_sitter_javascript, "queries/javascript.scm"},
+    {"html",   ".html", tree_sitter_html,     "queries/html.scm"},
+    {"css",    ".css", tree_sitter_css,      "queries/css.scm"},
+    {NULL, NULL, NULL, NULL} // Sentinel to mark the end of the array
+};
+
 
 // Predefined color themes
 typedef struct {
@@ -244,15 +270,20 @@ const char *get_html_class(const char *capture_name) {
 
 // Print usage help
 void print_usage(const char *progname) {
-    fprintf(stderr, "Usage: %s [options] file.py\n", progname);
+    fprintf(stderr, "Usage: %s [options] <file_path>\n", progname);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  -q FILE     Use external query file for highlights\n");
     fprintf(stderr, "  -c THEME    Select color theme (default: default)\n");
+    fprintf(stderr, "  -l LANG     Explicitly set language (e.g., 'python', 'c', 'javascript'). Overrides file extension detection.\n");
     fprintf(stderr, "  -o FILE     Output to file instead of stdout\n");
     fprintf(stderr, "  --html      Output HTML instead of ANSI colors\n");
     fprintf(stderr, "Available themes: ");
     for (size_t i = 0; i < THEMES_COUNT; i++) {
         fprintf(stderr, "%s%s", themes[i].name, (i < THEMES_COUNT - 1) ? ", " : "\n");
+    }
+    fprintf(stderr, "Supported languages (auto-detected by extension or set with -l): ");
+    for (int i = 0; supported_languages[i].name != NULL; i++) {
+        fprintf(stderr, "%s%s", supported_languages[i].name, (supported_languages[i+1].name != NULL) ? ", " : "\n");
     }
 }
 
@@ -287,13 +318,39 @@ char *load_file(const char *filename, size_t *out_size) {
     return buf;
 }
 
+// Function to get language info based on file extension
+LanguageInfo* get_language_info_from_path(const char* filepath) {
+    const char *dot = strrchr(filepath, '.');
+    if (!dot || dot == filepath) return NULL; // No extension or starts with dot
+
+    for (int i = 0; supported_languages[i].name != NULL; i++) {
+        if (strcmp(dot, supported_languages[i].extension) == 0) {
+            return &supported_languages[i];
+        }
+    }
+    return NULL; // Language not found
+}
+
+// Function to get language info based on explicit language name
+LanguageInfo* get_language_info_from_name(const char* lang_name) {
+    for (int i = 0; supported_languages[i].name != NULL; i++) {
+        if (strcmp(lang_name, supported_languages[i].name) == 0) {
+            return &supported_languages[i];
+        }
+    }
+    return NULL; // Language not found
+}
+
+
 int main(int argc, char **argv) {
     const char *input_file = NULL;
     const char *query_file = NULL;
     const char *output_file = NULL;
+    const char *explicit_lang_name = NULL;
     bool output_html = false;
     selected_theme = &themes[0]; // default theme
-    TSQueryMatch match;
+    
+    LanguageInfo *current_lang_info = NULL;
 
     // Parse arguments
     for (int i = 1; i < argc; i++) {
@@ -314,7 +371,10 @@ int main(int argc, char **argv) {
                 print_usage(argv[0]);
                 return 1;
             }
-        } else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
+        } else if (strcmp(argv[i], "-l") == 0 && i + 1 < argc) {
+            explicit_lang_name = argv[++i];
+        }
+        else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
             output_file = argv[++i];
         } else if (strcmp(argv[i], "--html") == 0) {
             output_html = true;
@@ -335,6 +395,25 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Determine language: explicit -l flag takes precedence, then file extension
+    if (explicit_lang_name) {
+        current_lang_info = get_language_info_from_name(explicit_lang_name);
+        if (!current_lang_info) {
+            fprintf(stderr, "Error: Unknown language '%s' specified with -l flag.\n", explicit_lang_name);
+            print_usage(argv[0]);
+            return 1;
+        }
+    } else {
+        current_lang_info = get_language_info_from_path(input_file);
+        if (!current_lang_info) {
+            fprintf(stderr, "Error: Could not determine language for '%s' from file extension.\n", input_file);
+            fprintf(stderr, "Please specify it using the -l flag.\n");
+            print_usage(argv[0]);
+            return 1;
+        }
+    }
+
+
     // Load source code
     size_t code_size;
     char *code = load_file(input_file, &code_size);
@@ -354,40 +433,17 @@ int main(int argc, char **argv) {
             return 1;
         }
     } else {
-        // Fixed default highlight query - added missing newlines and fixed syntax
-        const char *default_query =
-            "(function_definition name: (identifier) @function)\n"
-            "(class_definition name: (identifier) @type)\n"
-            "(call function: (identifier) @function.builtin (#match? @function.builtin \"^(print|len|str|int|float|list|dict|set|tuple|range|enumerate|zip|map|filter|sorted|reversed|any|all|sum|max|min|abs|round|bool|type|isinstance|hasattr|getattr|setattr|delattr|dir|vars|globals|locals|eval|exec|compile|open|input|__import__)$\"))\n"
-            "(call function: (identifier) @function.call)\n"
-            "(string) @string\n"
-            "(comment) @comment\n"
-            "(integer) @number\n"
-            "(float) @number\n"
-            "(true) @constant.builtin\n"
-            "(false) @constant.builtin\n"
-            "(none) @constant.builtin\n"
-            "\"if\" @keyword.control\n"
-            "\"else\" @keyword.control\n"
-            "\"elif\" @keyword.control\n"
-            "\"for\" @keyword.control\n"
-            "\"while\" @keyword.control\n"
-            "\"try\" @keyword.control\n"
-            "\"except\" @keyword.control\n"
-            "\"finally\" @keyword.control\n"
-            "\"with\" @keyword.control\n"
-            "\"def\" @keyword.function\n"
-            "\"class\" @keyword.type\n"
-            "\"import\" @keyword.import\n"
-            "\"from\" @keyword.import\n"
-            "\"return\" @keyword.return\n"
-            "\"yield\" @keyword.return\n"
-            "\"break\" @keyword.control\n"
-            "\"continue\" @keyword.control\n"
-            "\"pass\" @keyword.control\n";
-        query_str = strdup(default_query);
-        if (!query_str) {
-            fprintf(stderr, "Failed to allocate memory for query\n");
+        // Load default query based on detected language
+        if (current_lang_info->default_query_path) {
+            size_t query_size;
+            query_str = load_file(current_lang_info->default_query_path, &query_size);
+            if (!query_str) {
+                fprintf(stderr, "Failed to load default query for %s from %s\n", current_lang_info->name, current_lang_info->default_query_path);
+                free(code);
+                return 1;
+            }
+        } else {
+            fprintf(stderr, "No default query path defined for language '%s'\n", current_lang_info->name);
             free(code);
             return 1;
         }
@@ -402,8 +458,9 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    if (!ts_parser_set_language(parser, tree_sitter_python())) {
-        fprintf(stderr, "Failed to set language. Version mismatch?\n");
+    // Set language based on detected/explicit choice
+    if (!ts_parser_set_language(parser, current_lang_info->language_function())) {
+        fprintf(stderr, "Failed to set language for %s. Version mismatch?\n", current_lang_info->name);
         ts_parser_delete(parser);
         free(code);
         free(query_str);
@@ -421,10 +478,10 @@ int main(int argc, char **argv) {
     
     TSNode root = ts_tree_root_node(tree);
 
-    // Compile query
+    // Compile query using the selected language
     TSQueryError error_type;
     uint32_t error_offset;
-    TSQuery *query = ts_query_new(tree_sitter_python(), query_str, strlen(query_str), &error_offset, &error_type);
+    TSQuery *query = ts_query_new(current_lang_info->language_function(), query_str, strlen(query_str), &error_offset, &error_type);
     if (!query) {
         fprintf(stderr, "Query parse error at offset %u, error type: %d\n", error_offset, error_type);
         ts_tree_delete(tree);
@@ -464,6 +521,7 @@ int main(int argc, char **argv) {
     ts_query_cursor_exec(cursor, query, root);
 
     size_t current_byte = 0;
+    TSQueryMatch match; // <-- Declaration added here
 
     if (output_html) {
         // Print HTML header with dynamic CSS based on selected theme
@@ -473,7 +531,8 @@ int main(int argc, char **argv) {
         fprintf(out, "body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; margin: 20px; }\n");
         fprintf(out, "pre { margin: 0; line-height: 1.4; }\n");
 
-        // Theme-specific styles
+        // Theme-specific styles (consider moving these to external CSS files for better modularity)
+        // For brevity, using the existing if-else if structure.
         if (strcmp(selected_theme->name, "gruvbox") == 0) {
             fprintf(out, "body { background: #282828; color: #ebdbb2; }\n");
             fprintf(out, ".function-builtin { color: #8ec07c; }\n");

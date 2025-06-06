@@ -1,0 +1,84 @@
+/* This is a multi-line CSS comment */
+
+/* Global styles */
+body {
+  font-family: "Roboto", sans-serif; /* String literal */
+  margin: 0;
+  padding: 0;
+  background-color: #f8f8f8; /* Hex color value */
+  color: #333;
+}
+
+/* Header styling */
+header {
+  background-color: #4caf50; /* Green */
+  color: white;
+  padding: 15px 20px;
+  text-align: center;
+  border-bottom: 2px solid #388e3c; /* Darker green */
+}
+
+h1 {
+  font-size: 2.5em; /* Numeric value with unit */
+  margin-bottom: 10px;
+}
+
+/* Navigation bar */
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333;
+}
+
+nav li {
+  float: left;
+}
+
+nav a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+nav a:hover {
+  background-color: #111;
+}
+
+/* Main content area */
+.container {
+  width: 80%;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* RGBA color value */
+  border-radius: 8px;
+}
+
+p {
+  line-height: 1.6;
+}
+
+/* Footer styling */
+footer {
+  text-align: center;
+  padding: 20px;
+  background-color: #eee;
+  font-size: 0.9em;
+  color: #555;
+  position: relative;
+  bottom: 0;
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 600px) {
+  /* Media query */
+  nav li {
+    float: none;
+    width: 100%;
+  }
+}
