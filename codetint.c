@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <tree_sitter/api.h>
 
+// #include "theme.h"
+
 // External Tree-sitter language functions
 const TSLanguage *tree_sitter_python(void);
 const TSLanguage *tree_sitter_c(void);

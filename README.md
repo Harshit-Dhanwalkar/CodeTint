@@ -106,7 +106,7 @@ Here are some features and improvements planned for CodeTint:
   - [ ] bash
   - [ ] lua
 - [x] Add line numbers: Implement an option to display line numbers alongside the highlighted code.
-- [ ] Optimize code by separating themes: Move theme definitions from main.c into separate files or a more modular structure for easier management and extensibility.
+- [ ] _Optimize code by separating themes: Move theme definitions from main.c into separate files or a more modular structure for easier management and extensibility._
 - [ ] Support for incremental parsing (Live Update): Extend this tool to watch files for changes and update highlighting live. This would involve using ts_parser_parse and re-parsing only changed parts for efficiency.
 - [ ] Support for piping input: Allow CodeTint to read code directly from standard input (stdin), enabling use in pipelines (e.g., cat file.py | ./codetint).
 - [ ] External theme configuration: Implement a mechanism to load themes from external configuration files (e.g., JSON, YAML) without recompilation.
