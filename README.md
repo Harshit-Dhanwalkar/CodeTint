@@ -95,14 +95,17 @@ Example: Highlighting a Python file with a specific theme
 
 Here are some features and improvements planned for CodeTint:
 
-- [x] Add highlighting for other languages: Extend support beyond Python to highlight a variety of programming languages.
+- [x] Add highlighting for other languages: Extend support beyond Python to highlight a variety of programming and scripting languages.
   - [x] python
+  - [ ] Rust
   - [x] C
   - [x] C++
   - [x] Javascript
   - [x] html
   - [x] css
-- [ ] Add line numbers: Implement an option to display line numbers alongside the highlighted code.
+  - [ ] bash
+  - [ ] lua
+- [x] Add line numbers: Implement an option to display line numbers alongside the highlighted code.
 - [ ] Optimize code by separating themes: Move theme definitions from main.c into separate files or a more modular structure for easier management and extensibility.
 - [ ] Support for incremental parsing (Live Update): Extend this tool to watch files for changes and update highlighting live. This would involve using ts_parser_parse and re-parsing only changed parts for efficiency.
 - [ ] Support for piping input: Allow CodeTint to read code directly from standard input (stdin), enabling use in pipelines (e.g., cat file.py | ./codetint).
