@@ -79,7 +79,7 @@ Available themes: default, `gruvbox`, `tokyonight-night`, `tokyonight-storm`, `c
 
 ## Outputting to HTML
 
-To generate HTML output for embedding in web pages or viewing in a browser, use the --html flag and redirect the output to an HTML file:
+To generate HTML output for embedding in web pages or viewing in a browser, use the `--html` flag and redirect the output to an HTML file:
 
 ```bash
 ./codetint -q custom-highlights.scm your_code.py
@@ -90,3 +90,18 @@ Example: Highlighting a Python file with a specific theme
 ```bash
 ./codetint -c dracula my_script.py
 ```
+
+# TODO
+
+Here are some features and improvements planned for CodeTint:
+
+[ ] Add highlighting for other languages: Extend support beyond Python to highlight a variety of programming languages.
+[ ] Add line numbers: Implement an option to display line numbers alongside the highlighted code.
+[ ] Optimize code by separating themes: Move theme definitions from main.c into separate files or a more modular structure for easier management and extensibility.
+[ ] Support for incremental parsing (Live Update): Extend this tool to watch files for changes and update highlighting live. This would involve using ts_parser_parse and re-parsing only changed parts for efficiency.
+[ ] Support for piping input: Allow CodeTint to read code directly from standard input (stdin), enabling use in pipelines (e.g., cat file.py | ./codetint).
+[ ] External theme configuration: Implement a mechanism to load themes from external configuration files (e.g., JSON, YAML) without recompilation.
+[ ] Configuration file support: Add a configuration file (e.g., .codetintrc) for default settings, such as preferred theme or default language.
+[ ] More robust error handling: Improve error messages and handling for file operations, parsing, and invalid arguments.
+[ ] Support for different line ending styles: Ensure correct rendering across various operating systems (Windows, Linux, macOS).
+[ ] Packaging and Distribution: Explore options for easier installation via package managers
