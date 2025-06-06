@@ -39,30 +39,21 @@ To get `CodeTint` up and running, follow these steps:
     This will download the necessary Tree-sitter core library and the Python grammar.
 
 3.  **Compile the Application:**
-    Navigate to the `codetint` directory (if your main source file is there) and compile `codetint.c`. You'll need to link against the Tree-sitter library and the Tree-sitter Python grammar. The exact paths might vary depending on where your submodules are built/located.
-
-    Assuming you build the grammars within their respective submodule directories (e.g., `tree-sitter-python/src/parser.c` compiled into a static/shared library `libtree-sitter-python.a/.so`):
+    Navigate to your project's root directory. Use the following `gcc` command to compile `CodeTint`. This command includes common warning flags (`-Wall`, `-Wextra`), debugging information (`-g`), and directly links the necessary Tree-sitter source files and grammar:
 
     ```bash
-    # Example compilation command (adjust paths as needed):
-    # This assumes 'tree-sitter' submodule is at the root and 'tree-sitter-python' is at the root.
-    # You might need to build the grammar into a library first.
-
-    # A more common approach is to build the grammars as shared libraries or link directly to parser.c
-    # This example links directly to the parser.c files from the submodules,
-    # which requires compilation of those files as part of your build.
-
-    gcc -o codetint codetint.c \
-        ./tree-sitter/lib/libtree-sitter.a \
-        ./tree-sitter-python/src/parser.c \
-        -I./tree-sitter/include \
+    gcc -Wall -Wextra -g \
+        -I./tree-sitter/lib/include \
         -I./tree-sitter-python/src \
-        -pthread -lm # Add other necessary flags like -fPIC if creating shared libs
+        codetint.c \
+        ./tree-sitter/lib/src/lib.c \
+        ./tree-sitter-python/src/parser.c \
+        ./tree-sitter-python/src/scanner.c \
+        -o codetint
     ```
 
-    - Make sure `codetint.c` is in the same directory as where you run `gcc` or adjust the path.
-    - You might need to adjust the include paths (`-I`) and library paths/names (`-L`, `-l`) based on your specific system and how you compile the Tree-sitter core and grammar.
-    - Often, `tree-sitter` provides a `Makefile` to build its shared library; you might need to build `libtree-sitter.so` and `libtree-sitter-python.so` separately first.
+    - This command assumes `codetint.c` is in the same directory where you run `gcc`, and that `tree-sitter` and `tree-sitter-python` are submodules cloned into the root of your project.
+    - It directly compiles the Tree-sitter core's `lib.c` and the Python grammar's `parser.c` and `scanner.c` alongside your main `codetint.c`.
 
 ## Usage
 
@@ -74,4 +65,28 @@ To highlight a Python file and display it directly in your terminal:
 
 ```bash
 ./codetint <your_python_file.py>
+```
+
+## Specifying a Color Theme
+
+You can choose from several built-in color themes using the -c option:
+
+```bash
+./codetint -c tokyonight-night examples/test1.py
+```
+
+Available themes: default, `gruvbox`, `tokyonight-night`, `tokyonight-storm`, `catppuccin-mocha`, `dracula`, `nord`, `solarized-dark`, `solarized-light`, `one-dark`, `monokai`, `github-dark`
+
+## Outputting to HTML
+
+To generate HTML output for embedding in web pages or viewing in a browser, use the --html flag and redirect the output to an HTML file:
+
+```bash
+./codetint -q custom-highlights.scm your_code.py
+```
+
+Example: Highlighting a Python file with a specific theme
+
+```bash
+./codetint -c dracula my_script.py
 ```
