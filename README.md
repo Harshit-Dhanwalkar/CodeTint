@@ -43,12 +43,27 @@ To get `CodeTint` up and running, follow these steps:
 
     ```bash
     gcc -Wall -Wextra -g \
+        -Imodules \
         -I./tree-sitter/lib/include \
         -I./tree-sitter-python/src \
-        codetint.c \
+        -I./tree-sitter-c/src \
+        -I./tree-sitter-cpp/src \
+        -I./tree-sitter-javascript/src \
+        -I./tree-sitter-html/src \
+        -I./tree-sitter-css/src \
+        codetint.c modules/theme.c \
         ./tree-sitter/lib/src/lib.c \
         ./tree-sitter-python/src/parser.c \
         ./tree-sitter-python/src/scanner.c \
+        ./tree-sitter-c/src/parser.c \
+        ./tree-sitter-cpp/src/parser.c \
+        ./tree-sitter-cpp/src/scanner.c \
+        ./tree-sitter-javascript/src/parser.c \
+        ./tree-sitter-javascript/src/scanner.c \
+        ./tree-sitter-html/src/parser.c \
+        ./tree-sitter-html/src/scanner.c \
+        ./tree-sitter-css/src/parser.c \
+        ./tree-sitter-css/src/scanner.c \
         -o codetint
     ```
 
