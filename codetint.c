@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <tree_sitter/api.h>
 
-// #include "theme.h"
+#include "theme.h"
 
 // External Tree-sitter language functions
 const TSLanguage *tree_sitter_python(void);
@@ -32,253 +32,6 @@ LanguageInfo supported_languages[] = {
     {NULL, NULL, NULL, NULL} // Sentinel to mark the end of the array
 };
 
-
-// Color themes
-typedef struct {
-    const char *name;
-    const char *function_builtin;
-    const char *function;
-    const char *string;
-    const char *comment;
-    const char *keyword;
-    const char *keyword_control;
-    const char *type;
-    const char *variable;
-    const char *constant;
-    const char *literal;
-    const char *line_number; // Added for themed line numbers
-    const char *reset;
-} ColorTheme;
-
-ColorTheme themes[] = {
-    {
-        "default",
-        "\x1b[35m",     // function.builtin
-        "\x1b[34m",     // function
-        "\x1b[32m",     // string
-        "\x1b[90m",     // comment
-        "\x1b[31m",     // keyword
-        "\x1b[31;1m",   // keyword.control
-        "\x1b[36m",     // type
-        "\x1b[33m",     // variable
-        "\x1b[35;1m",   // constant
-        "\x1b[32;1m",   // literal
-        "\x1b[90m",     // line_number (Bright Black/Gray)
-        "\x1b[0m"       // reset
-    },
-    {
-        "gruvbox",
-        "\x1b[38;5;142m", // function.builtin
-        "\x1b[38;5;109m", // function
-        "\x1b[38;5;108m", // string
-        "\x1b[38;5;245m", // comment
-        "\x1b[38;5;167m", // keyword
-        "\x1b[38;5;167;1m",// keyword.control
-        "\x1b[38;5;142m", // type
-        "\x1b[38;5;223m", // variable
-        "\x1b[38;5;175m", // constant
-        "\x1b[38;5;208m", // literal
-        "\x1b[38;5;245m", // line_number (Gruvbox Gray)
-        "\x1b[0m"       // reset
-    },
-    {
-        "tokyonight-night",
-        "\x1b[38;5;73m",  // function.builtin
-        "\x1b[38;5;110m", // function
-        "\x1b[38;5;158m", // string
-        "\x1b[38;5;102m", // comment
-        "\x1b[38;5;175m", // keyword
-        "\x1b[38;5;175;1m",// keyword.control
-        "\x1b[38;5;117m", // type
-        "\x1b[38;5;188m", // variable
-        "\x1b[38;5;215m", // constant
-        "\x1b[38;5;215m", // literal
-        "\x1b[38;5;102m", // line_number (Comment Gray)
-        "\x1b[0m"       // reset
-    },
-    {
-        "tokyonight-storm",
-        "\x1b[38;5;73m",  // function.builtin
-        "\x1b[38;5;75m",  // function
-        "\x1b[38;5;114m", // string
-        "\x1b[38;5;102m", // comment
-        "\x1b[38;5;176m", // keyword
-        "\x1b[38;5;176;1m",// keyword.control
-        "\x1b[38;5;117m", // type
-        "\x1b[38;5;188m", // variable
-        "\x1b[38;5;215m", // constant
-        "\x1b[38;5;215m", // literal
-        "\x1b[38;5;102m", // line_number (Comment Gray)
-        "\x1b[0m"       // reset
-    },
-    {
-        "catppuccin-mocha",
-        "\x1b[38;5;117m", // function.builtin
-        "\x1b[38;5;75m",  // function
-        "\x1b[38;5;114m", // string
-        "\x1b[38;5;102m", // comment
-        "\x1b[38;5;176m", // keyword
-        "\x1b[38;5;176;1m",// keyword.control
-        "\x1b[38;5;117m", // type
-        "\x1b[38;5;188m", // variable
-        "\x1b[38;5;215m", // constant
-        "\x1b[38;5;215m", // literal
-        "\x1b[38;5;102m", // line_number (Overlay1)
-        "\x1b[0m"       // reset
-    },
-    {
-        "dracula",
-        "\x1b[38;5;141m", // function.builtin
-        "\x1b[38;5;117m", // function
-        "\x1b[38;5;228m", // string
-        "\x1b[38;5;102m", // comment
-        "\x1b[38;5;212m", // keyword
-        "\x1b[38;5;212;1m",// keyword.control
-        "\x1b[38;5;117m", // type
-        "\x1b[38;5;255m", // variable
-        "\x1b[38;5;141m", // constant
-        "\x1b[38;5;215m", // literal
-        "\x1b[38;5;102m", // line_number (Comment Gray)
-        "\x1b[0m"       // reset
-    },
-    {
-        "nord",
-        "\x1b[38;5;116m", // function.builtin
-        "\x1b[38;5;81m",  // function
-        "\x1b[38;5;108m", // string
-        "\x1b[38;5;59m",  // comment
-        "\x1b[38;5;81m",  // keyword
-        "\x1b[38;5;81;1m",// keyword.control
-        "\x1b[38;5;116m", // type
-        "\x1b[38;5;188m", // variable
-        "\x1b[38;5;180m", // constant
-        "\x1b[38;5;209m", // literal
-        "\x1b[38;5;59m",  // line_number (Polar Night 3)
-        "\x1b[0m"       // reset
-    },
-    {
-        "solarized-dark",
-        "\x1b[38;5;37m",  // function.builtin
-        "\x1b[38;5;33m",  // function
-        "\x1b[38;5;37m",  // string
-        "\x1b[38;5;240m", // comment
-        "\x1b[38;5;64m",  // keyword
-        "\x1b[38;5;64;1m",// keyword.control
-        "\x1b[38;5;136m", // type
-        "\x1b[38;5;254m", // variable
-        "\x1b[38;5;125m", // constant
-        "\x1b[38;5;166m", // literal
-        "\x1b[38;5;240m", // line_number (Base01)
-        "\x1b[0m"       // reset
-    },
-    {
-        "solarized-light",
-        "\x1b[38;5;37m",  // function.builtin
-        "\x1b[38;5;33m",  // function
-        "\x1b[38;5;37m",  // string
-        "\x1b[38;5;244m", // comment
-        "\x1b[38;5;64m",  // keyword
-        "\x1b[38;5;64;1m",// keyword.control
-        "\x1b[38;5;136m", // type
-        "\x1b[38;5;235m", // variable
-        "\x1b[38;5;125m", // constant
-        "\x1b[38;5;166m", // literal
-        "\x1b[38;5;244m", // line_number (Base1)
-        "\x1b[0m"       // reset
-    },
-    {
-        "one-dark",
-        "\x1b[38;5;39m",  // function.builtin
-        "\x1b[38;5;75m",  // function
-        "\x1b[38;5;114m", // string
-        "\x1b[38;5;59m",  // comment
-        "\x1b[38;5;176m", // keyword
-        "\x1b[38;5;176;1m",// keyword.control
-        "\x1b[38;5;39m",  // type
-        "\x1b[38;5;145m", // variable
-        "\x1b[38;5;215m", // constant
-        "\x1b[38;5;215m", // literal
-        "\x1b[38;5;59m",  // line_number (Comment Gray)
-        "\x1b[0m"       // reset
-    },
-    {
-        "monokai",
-        "\x1b[38;5;81m",  // function.builtin
-        "\x1b[38;5;148m", // function
-        "\x1b[38;5;186m", // string
-        "\x1b[38;5;102m", // comment
-        "\x1b[38;5;197m", // keyword
-        "\x1b[38;5;197;1m",// keyword.control
-        "\x1b[38;5;81m",  // type
-        "\x1b[38;5;255m", // variable
-        "\x1b[38;5;141m", // constant
-        "\x1b[38;5;208m", // literal
-        "\x1b[38;5;102m", // line_number (Comment)
-        "\x1b[0m"       // reset
-    },
-    {
-        "github-dark",
-        "\x1b[38;5;117m", // function.builtin
-        "\x1b[38;5;183m", // function
-        "\x1b[38;5;150m", // string
-        "\x1b[38;5;102m", // comment
-        "\x1b[38;5;204m", // keyword
-        "\x1b[38;5;204;1m",// keyword.control
-        "\x1b[38;5;117m", // type
-        "\x1b[38;5;188m", // variable
-        "\x1b[38;5;117m", // constant
-        "\x1b[38;5;215m", // literal
-        "\x1b[38;5;102m", // line_number (Gray)
-        "\x1b[0m"       // reset
-    }
-};
-
-#define THEMES_COUNT (sizeof(themes)/sizeof(ColorTheme))
-
-// Global selected theme pointer
-ColorTheme *selected_theme = NULL;
-
-const char *get_ansi_color(const char *capture_name) {
-    if (strcmp(capture_name, "function.builtin") == 0) return selected_theme->function_builtin;
-    if (strcmp(capture_name, "function") == 0) return selected_theme->function;
-    if (strcmp(capture_name, "function.call") == 0) return selected_theme->function;
-    if (strcmp(capture_name, "string") == 0) return selected_theme->string;
-    if (strcmp(capture_name, "comment") == 0) return selected_theme->comment;
-    if (strcmp(capture_name, "keyword.control") == 0) return selected_theme->keyword_control;
-    if (strcmp(capture_name, "keyword") == 0) return selected_theme->keyword;
-    if (strcmp(capture_name, "keyword.function") == 0) return selected_theme->keyword;
-    if (strcmp(capture_name, "keyword.type") == 0) return selected_theme->keyword;
-    if (strcmp(capture_name, "keyword.import") == 0) return selected_theme->keyword;
-    if (strcmp(capture_name, "keyword.return") == 0) return selected_theme->keyword;
-    if (strcmp(capture_name, "type") == 0) return selected_theme->type;
-    if (strcmp(capture_name, "variable") == 0) return selected_theme->variable;
-    if (strcmp(capture_name, "constant") == 0) return selected_theme->constant;
-    if (strcmp(capture_name, "constant.builtin") == 0) return selected_theme->constant;
-    if (strcmp(capture_name, "literal") == 0) return selected_theme->literal;
-    if (strcmp(capture_name, "number") == 0) return selected_theme->literal;
-    return selected_theme->reset; // default reset
-}
-
-const char *get_html_class(const char *capture_name) {
-    if (strcmp(capture_name, "function.builtin") == 0) return "function-builtin";
-    if (strcmp(capture_name, "function") == 0) return "function";
-    if (strcmp(capture_name, "function.call") == 0) return "function";
-    if (strcmp(capture_name, "string") == 0) return "string";
-    if (strcmp(capture_name, "comment") == 0) return "comment";
-    if (strcmp(capture_name, "keyword.control") == 0) return "keyword-control";
-    if (strcmp(capture_name, "keyword") == 0) return "keyword";
-    if (strcmp(capture_name, "keyword.function") == 0) return "keyword";
-    if (strcmp(capture_name, "keyword.type") == 0) return "keyword";
-    if (strcmp(capture_name, "keyword.import") == 0) return "keyword";
-    if (strcmp(capture_name, "keyword.return") == 0) return "keyword";
-    if (strcmp(capture_name, "type") == 0) return "type";
-    if (strcmp(capture_name, "variable") == 0) return "variable";
-    if (strcmp(capture_name, "constant") == 0) return "constant";
-    if (strcmp(capture_name, "constant.builtin") == 0) return "constant";
-    if (strcmp(capture_name, "literal") == 0) return "literal";
-    if (strcmp(capture_name, "number") == 0) return "literal";
-    return NULL;
-}
 
 // Print usage help
 void print_usage(const char *progname) {
@@ -405,7 +158,6 @@ int main(int argc, char **argv) {
     const char *explicit_lang_name = NULL;
     bool output_html = false;
     bool show_line_numbers = false;
-    selected_theme = &themes[0];
     
     LanguageInfo *current_lang_info = NULL;
 
@@ -415,15 +167,7 @@ int main(int argc, char **argv) {
             query_file = argv[++i];
         } else if (strcmp(argv[i], "-c") == 0 && i + 1 < argc) {
             const char *theme_name = argv[++i];
-            bool found = false;
-            for (size_t t = 0; t < THEMES_COUNT; t++) {
-                if (strcmp(themes[t].name, theme_name) == 0) {
-                    selected_theme = &themes[t];
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
+            if (!set_selected_theme(theme_name)) { // Use the new function
                 fprintf(stderr, "Unknown theme '%s'\n", theme_name);
                 print_usage(argv[0]);
                 return 1;
@@ -604,7 +348,7 @@ int main(int argc, char **argv) {
         if (show_line_numbers) {
             fprintf(out,
                 ".line-number { "
-                "color: #888; "
+                "color: #888; " // Consider making this color theme-dependent as well
                 "text-align: right; "
                 "user-select: none; -webkit-user-select: none; "
                 "display: inline-block; "
@@ -619,6 +363,7 @@ int main(int argc, char **argv) {
             fprintf(out, ".code-content { display: block; flex-grow: 1; }\n");
         }
 
+        // HTML theme styles for the body and various token types
         if (strcmp(selected_theme->name, "gruvbox") == 0) {
             fprintf(out, "body { background: #282828; color: #ebdbb2; }\n");
             fprintf(out, ".function-builtin { color: #8ec07c; }\n");
@@ -694,12 +439,12 @@ int main(int argc, char **argv) {
             print_code_section(out, code, current_byte, start, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
 
             if (output_html) {
-                const char *cls = get_html_class(name);
+                const char *cls = get_html_class(name); // Use get_html_class from theme module
                 if (cls) fprintf(out, "<span class=\"%s\">", cls);
                 print_code_section(out, code, start, end, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
                 if (cls) fprintf(out, "</span>");
             } else {
-                fprintf(out, "%s", get_ansi_color(name));
+                fprintf(out, "%s", get_ansi_color(name)); // Use get_ansi_color from theme module
                 print_code_section(out, code, start, end, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
                 fprintf(out, "%s", selected_theme->reset);
             }

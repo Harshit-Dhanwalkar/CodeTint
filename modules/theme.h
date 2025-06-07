@@ -1,9 +1,11 @@
+// modules/theme.h
 #ifndef THEME_H
 #define THEME_H
 
-#include <stdio.h>
+#include <stdbool.h> // For bool type
+#include <stddef.h>
 
-// The structure that defines a color theme's properties.
+// Color themes
 typedef struct {
     const char *name;
     const char *function_builtin;
@@ -20,21 +22,16 @@ typedef struct {
     const char *reset;
 } ColorTheme;
 
-// --- Public Function Declarations ---
+// Extern declaration for the themes array and THEMES_COUNT
+extern ColorTheme themes[];
+extern const size_t THEMES_COUNT;
 
-// Retrieves a theme by its name. Returns NULL if not found.
-ColorTheme* theme_get_by_name(const char *name);
+// Global selected theme pointer
+extern ColorTheme *selected_theme;
 
-// Gets the ANSI color code for a given capture name from a specific theme.
-const char* theme_get_ansi_color(const ColorTheme *theme, const char *capture_name);
-
-// Gets the corresponding HTML class for a capture name.
-const char* theme_get_html_class(const char *capture_name);
-
-// Prints a comma-separated list of available theme names.
-void theme_print_available(FILE *stream);
-
-// Gets the total number of available themes.
-size_t theme_get_count(void);
+// Function declarations
+const char *get_ansi_color(const char *capture_name);
+const char *get_html_class(const char *capture_name);
+bool set_selected_theme(const char *theme_name);
 
 #endif // THEME_H
