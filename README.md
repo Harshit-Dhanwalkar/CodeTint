@@ -134,3 +134,5 @@ Here are some features and improvements planned for CodeTint:
 ## FIXES
 
 - [x] Output html is not showing color when applied colorsheme using dropdown menu.
+- [x] Dark background
+- [ ] Fix copy to clipboard button in html

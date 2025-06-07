@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <tree_sitter/api.h>
 
-#include "theme.h"
+#include "modules/theme.h"
 
 // External Tree-sitter language functions
 const TSLanguage *tree_sitter_python(void);
@@ -24,11 +24,11 @@ typedef struct {
 
 LanguageInfo supported_languages[] = {
     {"python", ".py", tree_sitter_python, "queries/python.scm"},
-    {"c",      ".c",  tree_sitter_c,      "queries/c.scm"},
-    {"cpp",    ".cpp", tree_sitter_cpp,    "queries/cpp.scm"},
+    {"c", ".c",  tree_sitter_c, "queries/c.scm"},
+    {"cpp", ".cpp", tree_sitter_cpp, "queries/cpp.scm"},
     {"javascript", ".js", tree_sitter_javascript, "queries/javascript.scm"},
-    {"html",   ".html", tree_sitter_html,   "queries/html.scm"},
-    {"css",    ".css", tree_sitter_css,    "queries/css.scm"},
+    {"html", ".html", tree_sitter_html, "queries/html.scm"},
+    {"css", ".css", tree_sitter_css, "queries/css.scm"},
     {NULL, NULL, NULL, NULL} // Sentinel to mark the end of the array
 };
 
@@ -122,11 +122,12 @@ void print_code_section(FILE *out,
         if (show_line_numbers && *at_line_start_ptr) {
             if (output_html) {
                 if (*current_line_num_ptr > 1) {
-                    fprintf(out, "</div>\n");
+                    fprintf(out, "</span></div>\n");
                 }
                 fprintf(out, "<div class=\"line\" id=\"L%u\">", *current_line_num_ptr);
                 fprintf(out, "<span class=\"line-number\">%*u</span>", line_num_padding, *current_line_num_ptr);
-            } else {
+                fprintf(out, "<span class=\"code-line-content\">");
+            } else { // ANSI BLOCK
                 fprintf(out, "%s%*u │%s ",
                     selected_theme->ansi_line_number,
                     line_num_padding,
@@ -349,9 +350,9 @@ int main(int argc, char **argv) {
         fprintf(out, "<!DOCTYPE html>\n<html><head><title>Highlighted Code</title>\n");
         fprintf(out, "<meta charset=\"utf-8\">\n");
         fprintf(out, "<style>\n");
-        fprintf(out, "body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; margin: 20px; }\n");
+        fprintf(out, "body { background-color: #1a1a1a; color: #e0e0e0; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; margin: 20px; }\n");
         fprintf(out, "pre { margin: 0; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }\n");
-        fprintf(out, ".code-container { border: 1px solid #555; padding: 10px; border-radius: 5px; overflow-x: auto; }\n");
+        fprintf(out, ".code-container { background-color: #0d0d0d; border: 1px solid #333; padding: 10px; border-radius: 5px; overflow-x: auto; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }\n");
         fprintf(out, ".line { display: flex; align-items: baseline; }\n");
         fprintf(out, ".line:hover { background-color: rgba(255, 255, 255, 0.05); }\n");
 
@@ -365,13 +366,27 @@ int main(int argc, char **argv) {
                 "min-width: %dch; "
                 "padding-right: 1em; "
                 "margin-right: 1em; "
-                "border-right: 1px solid #555; "
+                "border-right: 1px solid #333; "
                 "}\n",
-                selected_theme->ansi_line_number,
+                selected_theme->html_line_number,
                 line_num_padding
             );
-            fprintf(out, ".code-content { display: block; flex-grow: 1; }\n");
+            // Style for the span that holds actual code content
+            fprintf(out, ".code-line-content { display: block; flex-grow: 1; }\n");
         }
+        
+        // Base highlighting styles
+        fprintf(out, "/* Base highlighting styles (will be overridden by theme-specific rules) */\n");
+        fprintf(out, ".function-builtin { color: %s; }\n", themes[0].html_function_builtin);
+        fprintf(out, ".function { color: %s; }\n", themes[0].html_function);
+        fprintf(out, ".string { color: %s; }\n", themes[0].html_string);
+        fprintf(out, ".comment { color: %s; font-style: italic; }\n", themes[0].html_comment);
+        fprintf(out, ".keyword { color: %s; }\n", themes[0].html_keyword);
+        fprintf(out, ".keyword-control { color: %s; font-weight: bold; }\n", themes[0].html_keyword_control);
+        fprintf(out, ".type { color: %s; }\n", themes[0].html_type);
+        fprintf(out, ".variable { color: %s; }\n", themes[0].html_variable);
+        fprintf(out, ".constant { color: %s; }\n", themes[0].html_constant);
+        fprintf(out, ".literal { color: %s; }\n", themes[0].html_literal);
 
         // Generate all theme CSS classes
         for (size_t t = 0; t < THEMES_COUNT; t++) {
@@ -389,7 +404,7 @@ int main(int argc, char **argv) {
             else if (strcmp(themes[t].name, "github-dark") == 0) fprintf(out, "#22272E; color: #ADBAC7; }\n");
             else fprintf(out, "#1e1e1e; color: #d4d4d4; }\n"); // Default fallback
             
-// Generation for specific capture types: NOW USE html_ fields
+            // Generation for specific capture types using HTML colors
             fprintf(out, ".theme-%s .function-builtin { color: %s; }\n", themes[t].name, themes[t].html_function_builtin);
             fprintf(out, ".theme-%s .function { color: %s; }\n", themes[t].name, themes[t].html_function);
             fprintf(out, ".theme-%s .string { color: %s; }\n", themes[t].name, themes[t].html_string);
@@ -407,28 +422,72 @@ int main(int argc, char **argv) {
 
         // JavaScript for Copy-to-Clipboard and Theme Switcher
         fprintf(out, "<script>\n");
+        // Function to show a temporary message box for feedback
+        fprintf(out, "function showMessage(message, isError = false) {\n");
+        fprintf(out, "  let msgBox = document.getElementById('copyMessageBox');\n");
+        fprintf(out, "  if (!msgBox) {\n");
+        fprintf(out, "    msgBox = document.createElement('div');\n");
+        fprintf(out, "    msgBox.id = 'copyMessageBox';\n");
+        fprintf(out, "    msgBox.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 10px 20px; background-color: #333; color: white; border-radius: 5px; z-index: 1000; opacity: 0; transition: opacity 0.5s ease-in-out;';\n");
+        fprintf(out, "    document.body.appendChild(msgBox);\n");
+        fprintf(out, "  }\n");
+        fprintf(out, "  msgBox.textContent = message;\n");
+        fprintf(out, "  msgBox.style.backgroundColor = isError ? '#dc3545' : '#28a745'; // Red for error, green for success\n");
+        fprintf(out, "  msgBox.style.opacity = '1';\n");
+        fprintf(out, "  setTimeout(() => {\n");
+        fprintf(out, "    msgBox.style.opacity = '0';\n");
+        fprintf(out, "  }, 2000);\n");
+        fprintf(out, "}\n");
+        fprintf(out, "\n");
+        // Function to copy code, prioritizing modern Clipboard API
         fprintf(out, "function copyCode() {\n");
         fprintf(out, "  const codeElement = document.getElementById('code-content');\n");
         fprintf(out, "  if (codeElement) {\n");
         fprintf(out, "    const textToCopy = Array.from(codeElement.children)\n");
-        fprintf(out, "      .map(lineDiv => lineDiv.textContent.replace(/^\\s*\\d+\\s*│\\s*/, ''))\n"); // Remove line numbers
-        fprintf(out, "      .join('\\n');\n");
-        fprintf(out, "    navigator.clipboard.writeText(textToCopy)\n");
-        fprintf(out, "      .then(() => {\n");
-        fprintf(out, "        alert('Code copied to clipboard!');\n");
+        fprintf(out, "      .map(lineDiv => {\n");
+        fprintf(out, "        const codeContentSpan = lineDiv.querySelector('.code-line-content');\n");
+        fprintf(out, "        return codeContentSpan ? codeContentSpan.textContent : '';\n");
         fprintf(out, "      })\n");
-        fprintf(out, "      .catch(err => {\n");
-        fprintf(out, "        console.error('Failed to copy code: ', err);\n");
-        fprintf(out, "        alert('Failed to copy code. See console for details.');\n");
-        fprintf(out, "      });\n");
+        fprintf(out, "      .join('\\n');\n");
+        fprintf(out, "\n");
+        fprintf(out, "    if (navigator.clipboard && navigator.clipboard.writeText) {\n");
+        fprintf(out, "      navigator.clipboard.writeText(textToCopy)\n");
+        fprintf(out, "        .then(() => {\n");
+        fprintf(out, "          showMessage('Code copied to clipboard!');\n");
+        fprintf(out, "        })\n");
+        fprintf(out, "        .catch(err => {\n");
+        fprintf(out, "          console.error('Failed to copy code (Clipboard API): ', err);\n");
+        fprintf(out, "          showMessage('Failed to copy code. Please try manually.', true);\n");
+        fprintf(out, "        });\n");
+        fprintf(out, "    } else {\n");
+        fprintf(out, "      // Fallback for older browsers or restricted environments (less reliable)\n");
+        fprintf(out, "      const tempTextArea = document.createElement('textarea');\n");
+        fprintf(out, "      tempTextArea.value = textToCopy;\n");
+        fprintf(out, "      document.body.appendChild(tempTextArea);\n");
+        fprintf(out, "      tempTextArea.select();\n");
+        fprintf(out, "      try {\n");
+        fprintf(out, "        const successful = document.execCommand('copy');\n");
+        fprintf(out, "        if (successful) {\n");
+        fprintf(out, "          showMessage('Code copied (fallback)!');\n");
+        fprintf(out, "        } else {\n");
+        fprintf(out, "          showMessage('Failed to copy code. Manual copy required.', true);\n");
+        fprintf(out, "        }\n");
+        fprintf(out, "      } catch (err) {\n");
+        fprintf(out, "        console.error('Failed to copy code (execCommand): ', err);\n");
+        fprintf(out, "        showMessage('Failed to copy code. Manual copy required.', true);\n");
+        fprintf(out, "      }\n");
+        fprintf(out, "      document.body.removeChild(tempTextArea);\n");
+        fprintf(out, "    }\n");
         fprintf(out, "  }\n");
         fprintf(out, "}\n");
         fprintf(out, "\n");
+        // Function to apply selected theme to the body class
         fprintf(out, "function applyTheme(themeName) {\n");
         fprintf(out, "  document.body.className = 'theme-' + themeName;\n");
         fprintf(out, "  localStorage.setItem('selectedTheme', themeName);\n");
         fprintf(out, "}\n");
         fprintf(out, "\n");
+        // Event listener to apply saved theme on DOM load
         fprintf(out, "document.addEventListener('DOMContentLoaded', () => {\n");
         fprintf(out, "  const savedTheme = localStorage.getItem('selectedTheme');\n");
         fprintf(out, "  if (savedTheme) {\n");
@@ -447,9 +506,9 @@ int main(int argc, char **argv) {
         fprintf(out, "  <select id=\"theme-select\" onchange=\"applyTheme(this.value)\" style=\"padding: 8px; border-radius: 4px;\">\n");
         for (size_t t = 0; t < THEMES_COUNT; t++) {
             fprintf(out, "    <option value=\"%s\"%s>%s</option>\n", 
-                    themes[t].name, 
-                    (strcmp(themes[t].name, selected_theme->name) == 0 ? " selected" : ""),
-                    themes[t].name);
+                            themes[t].name, 
+                            (strcmp(themes[t].name, selected_theme->name) == 0 ? " selected" : ""),
+                            themes[t].name);
         }
         fprintf(out, "  </select>\n");
         fprintf(out, "</div>\n");
@@ -462,9 +521,9 @@ int main(int argc, char **argv) {
         if (show_line_numbers) {
             fprintf(out, "<div class=\"line\" id=\"L%u\">", current_line_num);
             fprintf(out, "<span class=\"line-number\">%*u</span>", line_num_padding, current_line_num);
+            fprintf(out, "<span class=\"code-line-content\">");
             at_line_start = false; // Reset to false after printing first line number
         }
-
     }
 
     while (ts_query_cursor_next_match(cursor, &match)) {
@@ -483,7 +542,7 @@ int main(int argc, char **argv) {
 
         for (uint32_t i = 0; i < match.capture_count; i++) {
             TSQueryCapture capture = sorted_captures[i];
-            
+
             uint32_t name_len;
             const char *name = ts_query_capture_name_for_id(query, capture.index, &name_len);
             if (!name) continue;
@@ -491,7 +550,7 @@ int main(int argc, char **argv) {
             TSNode node = capture.node;
             uint32_t start = ts_node_start_byte(node);
             uint32_t end = ts_node_end_byte(node);
-            
+
             if (start < current_byte) continue;
             if (start >= end || end > code_size) continue;
 
@@ -507,7 +566,7 @@ int main(int argc, char **argv) {
                 print_code_section(out, code, start, end, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
                 fprintf(out, "%s", selected_theme->ansi_reset);
             }
-            
+
             current_byte = end;
         }
     }
@@ -516,9 +575,10 @@ int main(int argc, char **argv) {
         print_code_section(out, code, current_byte, code_size, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
     }
     
-    // Ensure the last line div is closed
     if (output_html && show_line_numbers) {
-        fprintf(out, "</div>\n");
+        if (!at_line_start || current_line_num == 1) { // Current_line_num == 1 implies it was possibly a single-line file
+            fprintf(out, "</span></div>\n");
+        }
     }
 
     if (output_html) {

@@ -2,11 +2,22 @@
 <html><head><title>Highlighted Code</title>
 <meta charset="utf-8">
 <style>
-body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; margin: 20px; }
+body { background-color: #1a1a1a; color: #e0e0e0; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; margin: 20px; }
 pre { margin: 0; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }
-.code-container { border: 1px solid #555; padding: 10px; border-radius: 5px; overflow-x: auto; }
+.code-container { background-color: #0d0d0d; border: 1px solid #333; padding: 10px; border-radius: 5px; overflow-x: auto; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
 .line { display: flex; align-items: baseline; }
 .line:hover { background-color: rgba(255, 255, 255, 0.05); }
+/* Base highlighting styles (will be overridden by theme-specific rules) */
+.function-builtin { color: #B28CFF; }
+.function { color: #66B2FF; }
+.string { color: #9CCC65; }
+.comment { color: #7F7F7F; font-style: italic; }
+.keyword { color: #CC7832; }
+.keyword-control { color: #CC7832; font-weight: bold; }
+.type { color: #DA70D6; }
+.variable { color: #FFFFFF; }
+.constant { color: #9C9CFF; }
+.literal { color: #6A8759; }
 .theme-default body { background: #1e1e1e; color: #d4d4d4; }
 .theme-default .function-builtin { color: #B28CFF; }
 .theme-default .function { color: #66B2FF; }
@@ -153,20 +164,60 @@ pre { margin: 0; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;
 .theme-github-dark .line-number { color: #6A737D; }
 </style>
 <script>
+function showMessage(message, isError = false) {
+  let msgBox = document.getElementById('copyMessageBox');
+  if (!msgBox) {
+    msgBox = document.createElement('div');
+    msgBox.id = 'copyMessageBox';
+    msgBox.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 10px 20px; background-color: #333; color: white; border-radius: 5px; z-index: 1000; opacity: 0; transition: opacity 0.5s ease-in-out;';
+    document.body.appendChild(msgBox);
+  }
+  msgBox.textContent = message;
+  msgBox.style.backgroundColor = isError ? '#dc3545' : '#28a745'; // Red for error, green for success
+  msgBox.style.opacity = '1';
+  setTimeout(() => {
+    msgBox.style.opacity = '0';
+  }, 2000);
+}
+
 function copyCode() {
   const codeElement = document.getElementById('code-content');
   if (codeElement) {
     const textToCopy = Array.from(codeElement.children)
-      .map(lineDiv => lineDiv.textContent.replace(/^\s*\d+\s*│\s*/, ''))
-      .join('\n');
-    navigator.clipboard.writeText(textToCopy)
-      .then(() => {
-        alert('Code copied to clipboard!');
+      .map(lineDiv => {
+        const codeContentSpan = lineDiv.querySelector('.code-line-content');
+        return codeContentSpan ? codeContentSpan.textContent : '';
       })
-      .catch(err => {
-        console.error('Failed to copy code: ', err);
-        alert('Failed to copy code. See console for details.');
-      });
+      .join('\n');
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          showMessage('Code copied to clipboard!');
+        })
+        .catch(err => {
+          console.error('Failed to copy code (Clipboard API): ', err);
+          showMessage('Failed to copy code. Please try manually.', true);
+        });
+    } else {
+      // Fallback for older browsers or restricted environments (less reliable)
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = textToCopy;
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showMessage('Code copied (fallback)!');
+        } else {
+          showMessage('Failed to copy code. Manual copy required.', true);
+        }
+      } catch (err) {
+        console.error('Failed to copy code (execCommand): ', err);
+        showMessage('Failed to copy code. Manual copy required.', true);
+      }
+      document.body.removeChild(tempTextArea);
+    }
   }
 }
 
