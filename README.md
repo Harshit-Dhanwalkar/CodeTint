@@ -129,3 +129,7 @@ Here are some features and improvements planned for CodeTint:
 - [ ] More robust error handling: Improve error messages and handling for file operations, parsing, and invalid arguments.
 - [ ] Support for different line ending styles: Ensure correct rendering across various operating systems (Windows, Linux, macOS).
 - [ ] Packaging and Distribution: Explore options for easier installation via package managers.
+
+## FIXES
+
+- [x] Output html is not showing color when applied colorsheme using dropdown menu.

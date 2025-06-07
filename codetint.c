@@ -35,14 +35,14 @@ LanguageInfo supported_languages[] = {
 
 // Print usage help
 void print_usage(const char *progname) {
-    fprintf(stderr, "Usage: %s [options] <file_path>\n", progname);
+    fprintf(stderr, "Usage: %s [options] <file_path>\n\n", progname);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  -q FILE    Use external query file for highlights\n");
     fprintf(stderr, "  -c THEME   Select color theme (default: default)\n");
     fprintf(stderr, "  -l LANG    Explicitly set language (e.g., 'python', 'c', 'javascript'). Overrides file extension detection.\n");
     fprintf(stderr, "  -o FILE    Output to file instead of stdout\n");
     fprintf(stderr, "  --html     Output HTML instead of ANSI colors\n");
-    fprintf(stderr, "  -n, --line-numbers Show line numbers\n");
+    fprintf(stderr, "  -n, --line-numbers Show line numbers\n\n");
     fprintf(stderr, "Available themes: ");
     for (size_t i = 0; i < THEMES_COUNT; i++) {
         fprintf(stderr, "%s%s", themes[i].name, (i < THEMES_COUNT - 1) ? ", " : "\n");
@@ -121,13 +121,17 @@ void print_code_section(FILE *out,
     for (size_t i = start_byte; i < end_byte; ++i) {
         if (show_line_numbers && *at_line_start_ptr) {
             if (output_html) {
+                if (*current_line_num_ptr > 1) {
+                    fprintf(out, "</div>\n");
+                }
+                fprintf(out, "<div class=\"line\" id=\"L%u\">", *current_line_num_ptr);
                 fprintf(out, "<span class=\"line-number\">%*u</span>", line_num_padding, *current_line_num_ptr);
             } else {
                 fprintf(out, "%s%*u │%s ",
-                    selected_theme->line_number,
+                    selected_theme->ansi_line_number,
                     line_num_padding,
                     *current_line_num_ptr,
-                    selected_theme->reset
+                    selected_theme->ansi_reset
                 );
             }
             *at_line_start_ptr = false;
@@ -167,7 +171,7 @@ int main(int argc, char **argv) {
             query_file = argv[++i];
         } else if (strcmp(argv[i], "-c") == 0 && i + 1 < argc) {
             const char *theme_name = argv[++i];
-            if (!set_selected_theme(theme_name)) { // Use the new function
+            if (!set_selected_theme(theme_name)) {
                 fprintf(stderr, "Unknown theme '%s'\n", theme_name);
                 print_usage(argv[0]);
                 return 1;
@@ -342,70 +346,125 @@ int main(int argc, char **argv) {
     }
 
     if (output_html) {
-        fprintf(out, "<!DOCTYPE html>\n<html><head><style>\n");
+        fprintf(out, "<!DOCTYPE html>\n<html><head><title>Highlighted Code</title>\n");
+        fprintf(out, "<meta charset=\"utf-8\">\n");
+        fprintf(out, "<style>\n");
         fprintf(out, "body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; margin: 20px; }\n");
-        fprintf(out, "pre { margin: 0; line-height: 1.4; }\n");
+        fprintf(out, "pre { margin: 0; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }\n");
+        fprintf(out, ".code-container { border: 1px solid #555; padding: 10px; border-radius: 5px; overflow-x: auto; }\n");
+        fprintf(out, ".line { display: flex; align-items: baseline; }\n");
+        fprintf(out, ".line:hover { background-color: rgba(255, 255, 255, 0.05); }\n");
+
         if (show_line_numbers) {
             fprintf(out,
                 ".line-number { "
-                "color: #888; " // Consider making this color theme-dependent as well
+                "color: %s; "
                 "text-align: right; "
                 "user-select: none; -webkit-user-select: none; "
                 "display: inline-block; "
-                "width: %dch; "
+                "min-width: %dch; "
                 "padding-right: 1em; "
                 "margin-right: 1em; "
                 "border-right: 1px solid #555; "
                 "}\n",
+                selected_theme->ansi_line_number,
                 line_num_padding
             );
-            fprintf(out, "pre { display: flex; }\n");
             fprintf(out, ".code-content { display: block; flex-grow: 1; }\n");
         }
 
-        // HTML theme styles for the body and various token types
-        if (strcmp(selected_theme->name, "gruvbox") == 0) {
-            fprintf(out, "body { background: #282828; color: #ebdbb2; }\n");
-            fprintf(out, ".function-builtin { color: #8ec07c; }\n");
-            fprintf(out, ".function { color: #83a598; }\n");
-            fprintf(out, ".string { color: #b8bb26; }\n");
-            fprintf(out, ".comment { color: #928374; font-style: italic; }\n");
-            fprintf(out, ".keyword { color: #fb4934; }\n");
-            fprintf(out, ".keyword-control { color: #fb4934; font-weight: bold; }\n");
-            fprintf(out, ".type { color: #fabd2f; }\n");
-            fprintf(out, ".variable { color: #ebdbb2; }\n");
-            fprintf(out, ".constant { color: #d3869b; }\n");
-            fprintf(out, ".literal { color: #fe8019; }\n");
-        } else if (strcmp(selected_theme->name, "dracula") == 0) {
-            fprintf(out, "body { background: #282a36; color: #f8f8f2; }\n");
-            fprintf(out, ".function-builtin { color: #bd93f9; }\n");
-            fprintf(out, ".function { color: #8be9fd; }\n");
-            fprintf(out, ".string { color: #f1fa8c; }\n");
-            fprintf(out, ".comment { color: #6272a4; font-style: italic; }\n");
-            fprintf(out, ".keyword { color: #ff79c6; }\n");
-            fprintf(out, ".keyword-control { color: #ff79c6; font-weight: bold; }\n");
-            fprintf(out, ".type { color: #8be9fd; }\n");
-            fprintf(out, ".variable { color: #f8f8f2; }\n");
-            fprintf(out, ".constant { color: #bd93f9; }\n");
-            fprintf(out, ".literal { color: #ffb86c; }\n");
-        } else { // Default theme
-            fprintf(out, "body { background: #1e1e1e; color: #d4d4d4; }\n");
-            fprintf(out, ".function-builtin { color: #dcdcaa; }\n");
-            fprintf(out, ".function { color: #569cd6; }\n");
-            fprintf(out, ".string { color: #ce9178; }\n");
-            fprintf(out, ".comment { color: #6a9955; font-style: italic; }\n");
-            fprintf(out, ".keyword { color: #c586c0; }\n");
-            fprintf(out, ".keyword-control { color: #c586c0; font-weight: bold; }\n");
-            fprintf(out, ".type { color: #4ec9b0; }\n");
-            fprintf(out, ".variable { color: #9cdcfe; }\n");
-            fprintf(out, ".constant { color: #569cd6; font-weight: bold; }\n");
-            fprintf(out, ".literal { color: #b5cea8; }\n");
+        // Generate all theme CSS classes
+        for (size_t t = 0; t < THEMES_COUNT; t++) {
+            fprintf(out, ".theme-%s body { background: ", themes[t].name);
+            if (strcmp(themes[t].name, "gruvbox") == 0) fprintf(out, "#282828; color: #ebdbb2; }\n");
+            else if (strcmp(themes[t].name, "dracula") == 0) fprintf(out, "#282a36; color: #f8f8f2; }\n");
+            else if (strcmp(themes[t].name, "nord") == 0) fprintf(out, "#2E3440; color: #D8DEE9; }\n");
+            else if (strcmp(themes[t].name, "one-dark") == 0) fprintf(out, "#282C34; color: #ABB2BF; }\n");
+            else if (strcmp(themes[t].name, "tokyonight-night") == 0) fprintf(out, "#1a1b26; color: #a9b1d6; }\n");
+            else if (strcmp(themes[t].name, "tokyonight-storm") == 0) fprintf(out, "#24283b; color: #c0caf5; }\n");
+            else if (strcmp(themes[t].name, "catppuccin-mocha") == 0) fprintf(out, "#1E1E2E; color: #CDD6F4; }\n");
+            else if (strcmp(themes[t].name, "solarized-dark") == 0) fprintf(out, "#002b36; color: #839496; }\n");
+            else if (strcmp(themes[t].name, "solarized-light") == 0) fprintf(out, "#fdf6e3; color: #586e75; }\n");
+            else if (strcmp(themes[t].name, "monokai") == 0) fprintf(out, "#272822; color: #F8F8F2; }\n");
+            else if (strcmp(themes[t].name, "github-dark") == 0) fprintf(out, "#22272E; color: #ADBAC7; }\n");
+            else fprintf(out, "#1e1e1e; color: #d4d4d4; }\n"); // Default fallback
+            
+// Generation for specific capture types: NOW USE html_ fields
+            fprintf(out, ".theme-%s .function-builtin { color: %s; }\n", themes[t].name, themes[t].html_function_builtin);
+            fprintf(out, ".theme-%s .function { color: %s; }\n", themes[t].name, themes[t].html_function);
+            fprintf(out, ".theme-%s .string { color: %s; }\n", themes[t].name, themes[t].html_string);
+            fprintf(out, ".theme-%s .comment { color: %s; font-style: italic; }\n", themes[t].name, themes[t].html_comment);
+            fprintf(out, ".theme-%s .keyword { color: %s; }\n", themes[t].name, themes[t].html_keyword);
+            fprintf(out, ".theme-%s .keyword-control { color: %s; font-weight: bold; }\n", themes[t].name, themes[t].html_keyword_control);
+            fprintf(out, ".theme-%s .type { color: %s; }\n", themes[t].name, themes[t].html_type);
+            fprintf(out, ".theme-%s .variable { color: %s; }\n", themes[t].name, themes[t].html_variable);
+            fprintf(out, ".theme-%s .constant { color: %s; }\n", themes[t].name, themes[t].html_constant);
+            fprintf(out, ".theme-%s .literal { color: %s; }\n", themes[t].name, themes[t].html_literal);
+            fprintf(out, ".theme-%s .line-number { color: %s; }\n", themes[t].name, themes[t].html_line_number);
         }
         
-        fprintf(out, "</style></head><body><pre>");
-        if (show_line_numbers) {
-            fprintf(out, "<span class=\"code-content\">"); 
+        fprintf(out, "</style>\n");
+
+        // JavaScript for Copy-to-Clipboard and Theme Switcher
+        fprintf(out, "<script>\n");
+        fprintf(out, "function copyCode() {\n");
+        fprintf(out, "  const codeElement = document.getElementById('code-content');\n");
+        fprintf(out, "  if (codeElement) {\n");
+        fprintf(out, "    const textToCopy = Array.from(codeElement.children)\n");
+        fprintf(out, "      .map(lineDiv => lineDiv.textContent.replace(/^\\s*\\d+\\s*│\\s*/, ''))\n"); // Remove line numbers
+        fprintf(out, "      .join('\\n');\n");
+        fprintf(out, "    navigator.clipboard.writeText(textToCopy)\n");
+        fprintf(out, "      .then(() => {\n");
+        fprintf(out, "        alert('Code copied to clipboard!');\n");
+        fprintf(out, "      })\n");
+        fprintf(out, "      .catch(err => {\n");
+        fprintf(out, "        console.error('Failed to copy code: ', err);\n");
+        fprintf(out, "        alert('Failed to copy code. See console for details.');\n");
+        fprintf(out, "      });\n");
+        fprintf(out, "  }\n");
+        fprintf(out, "}\n");
+        fprintf(out, "\n");
+        fprintf(out, "function applyTheme(themeName) {\n");
+        fprintf(out, "  document.body.className = 'theme-' + themeName;\n");
+        fprintf(out, "  localStorage.setItem('selectedTheme', themeName);\n");
+        fprintf(out, "}\n");
+        fprintf(out, "\n");
+        fprintf(out, "document.addEventListener('DOMContentLoaded', () => {\n");
+        fprintf(out, "  const savedTheme = localStorage.getItem('selectedTheme');\n");
+        fprintf(out, "  if (savedTheme) {\n");
+        fprintf(out, "    applyTheme(savedTheme);\n");
+        fprintf(out, "  } else {\n");
+        fprintf(out, "    applyTheme('%s'); // Apply default theme on first load\n", selected_theme->name);
+        fprintf(out, "  }\n");
+        fprintf(out, "});\n");
+        fprintf(out, "</script>\n");
+        fprintf(out, "</head>\n");
+
+        fprintf(out, "<body class=\"theme-%s\">\n", selected_theme->name);
+        fprintf(out, "<div>\n"); // Controls container
+        fprintf(out, "  <button onclick=\"copyCode()\" style=\"margin-right: 10px; padding: 8px 15px;\">Copy Code</button>\n");
+        fprintf(out, "  <label for=\"theme-select\">Theme:</label>\n");
+        fprintf(out, "  <select id=\"theme-select\" onchange=\"applyTheme(this.value)\" style=\"padding: 8px; border-radius: 4px;\">\n");
+        for (size_t t = 0; t < THEMES_COUNT; t++) {
+            fprintf(out, "    <option value=\"%s\"%s>%s</option>\n", 
+                    themes[t].name, 
+                    (strcmp(themes[t].name, selected_theme->name) == 0 ? " selected" : ""),
+                    themes[t].name);
         }
+        fprintf(out, "  </select>\n");
+        fprintf(out, "</div>\n");
+        fprintf(out, "<br>\n");
+
+        fprintf(out, "<div class=\"code-container\">\n");
+        fprintf(out, "<pre><code id=\"code-content\">");
+
+        // Initial line div for the very first line if line numbers are enabled
+        if (show_line_numbers) {
+            fprintf(out, "<div class=\"line\" id=\"L%u\">", current_line_num);
+            fprintf(out, "<span class=\"line-number\">%*u</span>", line_num_padding, current_line_num);
+            at_line_start = false; // Reset to false after printing first line number
+        }
+
     }
 
     while (ts_query_cursor_next_match(cursor, &match)) {
@@ -439,14 +498,14 @@ int main(int argc, char **argv) {
             print_code_section(out, code, current_byte, start, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
 
             if (output_html) {
-                const char *cls = get_html_class(name); // Use get_html_class from theme module
+                const char *cls = get_html_class(name);
                 if (cls) fprintf(out, "<span class=\"%s\">", cls);
                 print_code_section(out, code, start, end, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
                 if (cls) fprintf(out, "</span>");
             } else {
-                fprintf(out, "%s", get_ansi_color(name)); // Use get_ansi_color from theme module
+                fprintf(out, "%s", get_ansi_color(name));
                 print_code_section(out, code, start, end, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
-                fprintf(out, "%s", selected_theme->reset);
+                fprintf(out, "%s", selected_theme->ansi_reset);
             }
             
             current_byte = end;
@@ -456,12 +515,16 @@ int main(int argc, char **argv) {
     if (current_byte < code_size) {
         print_code_section(out, code, current_byte, code_size, show_line_numbers, line_num_padding, &current_line_num, &at_line_start, output_html);
     }
+    
+    // Ensure the last line div is closed
+    if (output_html && show_line_numbers) {
+        fprintf(out, "</div>\n");
+    }
 
     if (output_html) {
-        if (show_line_numbers) {
-            fprintf(out, "</span>");
-        }
-        fprintf(out, "</pre></body></html>\n");
+        fprintf(out, "</code></pre>\n");
+        fprintf(out, "</div>\n");
+        fprintf(out, "</body></html>\n");
     }
 
     ts_query_cursor_delete(cursor);

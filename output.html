@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html><head><title>Highlighted Code</title>
+<meta charset="utf-8">
+<style>
+body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; margin: 20px; }
+pre { margin: 0; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }
+.code-container { border: 1px solid #555; padding: 10px; border-radius: 5px; overflow-x: auto; }
+.line { display: flex; align-items: baseline; }
+.line:hover { background-color: rgba(255, 255, 255, 0.05); }
+.theme-default body { background: #1e1e1e; color: #d4d4d4; }
+.theme-default .function-builtin { color: #B28CFF; }
+.theme-default .function { color: #66B2FF; }
+.theme-default .string { color: #9CCC65; }
+.theme-default .comment { color: #7F7F7F; font-style: italic; }
+.theme-default .keyword { color: #CC7832; }
+.theme-default .keyword-control { color: #CC7832; font-weight: bold; }
+.theme-default .type { color: #DA70D6; }
+.theme-default .variable { color: #FFFFFF; }
+.theme-default .constant { color: #9C9CFF; }
+.theme-default .literal { color: #6A8759; }
+.theme-default .line-number { color: #7F7F7F; }
+.theme-gruvbox body { background: #282828; color: #ebdbb2; }
+.theme-gruvbox .function-builtin { color: #A9B665; }
+.theme-gruvbox .function { color: #89B482; }
+.theme-gruvbox .string { color: #A9B665; }
+.theme-gruvbox .comment { color: #928374; font-style: italic; }
+.theme-gruvbox .keyword { color: #FE8019; }
+.theme-gruvbox .keyword-control { color: #FE8019; font-weight: bold; }
+.theme-gruvbox .type { color: #D3869B; }
+.theme-gruvbox .variable { color: #EBDBB2; }
+.theme-gruvbox .constant { color: #D8A657; }
+.theme-gruvbox .literal { color: #FABD2F; }
+.theme-gruvbox .line-number { color: #928374; }
+.theme-tokyonight-night body { background: #1a1b26; color: #a9b1d6; }
+.theme-tokyonight-night .function-builtin { color: #7DCFFF; }
+.theme-tokyonight-night .function { color: #7AA87B; }
+.theme-tokyonight-night .string { color: #9ECCBB; }
+.theme-tokyonight-night .comment { color: #565F89; font-style: italic; }
+.theme-tokyonight-night .keyword { color: #BB9AFD; }
+.theme-tokyonight-night .keyword-control { color: #BB9AFD; font-weight: bold; }
+.theme-tokyonight-night .type { color: #73DACA; }
+.theme-tokyonight-night .variable { color: #C0CAF5; }
+.theme-tokyonight-night .constant { color: #BB9AFD; }
+.theme-tokyonight-night .literal { color: #FF9E64; }
+.theme-tokyonight-night .line-number { color: #565F89; }
+.theme-tokyonight-storm body { background: #24283b; color: #c0caf5; }
+.theme-tokyonight-storm .function-builtin { color: #7DCFFF; }
+.theme-tokyonight-storm .function { color: #7AA87B; }
+.theme-tokyonight-storm .string { color: #9ECCBB; }
+.theme-tokyonight-storm .comment { color: #565F89; font-style: italic; }
+.theme-tokyonight-storm .keyword { color: #BB9AFD; }
+.theme-tokyonight-storm .keyword-control { color: #BB9AFD; font-weight: bold; }
+.theme-tokyonight-storm .type { color: #73DACA; }
+.theme-tokyonight-storm .variable { color: #C0CAF5; }
+.theme-tokyonight-storm .constant { color: #BB9AFD; }
+.theme-tokyonight-storm .literal { color: #FF9E64; }
+.theme-tokyonight-storm .line-number { color: #565F89; }
+.theme-catppuccin-mocha body { background: #1E1E2E; color: #CDD6F4; }
+.theme-catppuccin-mocha .function-builtin { color: #89B4FA; }
+.theme-catppuccin-mocha .function { color: #89B4FA; }
+.theme-catppuccin-mocha .string { color: #A6E3A1; }
+.theme-catppuccin-mocha .comment { color: #6C7086; font-style: italic; }
+.theme-catppuccin-mocha .keyword { color: #CBA6F7; }
+.theme-catppuccin-mocha .keyword-control { color: #CBA6F7; font-weight: bold; }
+.theme-catppuccin-mocha .type { color: #F5C2E7; }
+.theme-catppuccin-mocha .variable { color: #CDD6F4; }
+.theme-catppuccin-mocha .constant { color: #F38BA8; }
+.theme-catppuccin-mocha .literal { color: #FAB387; }
+.theme-catppuccin-mocha .line-number { color: #6C7086; }
+.theme-dracula body { background: #282a36; color: #f8f8f2; }
+.theme-dracula .function-builtin { color: #BD93F9; }
+.theme-dracula .function { color: #50FA7B; }
+.theme-dracula .string { color: #F1FA8C; }
+.theme-dracula .comment { color: #6272A4; font-style: italic; }
+.theme-dracula .keyword { color: #FF79C6; }
+.theme-dracula .keyword-control { color: #FF79C6; font-weight: bold; }
+.theme-dracula .type { color: #8BE9FD; }
+.theme-dracula .variable { color: #F8F8F2; }
+.theme-dracula .constant { color: #BD93F9; }
+.theme-dracula .literal { color: #FFB86C; }
+.theme-dracula .line-number { color: #6272A4; }
+.theme-nord body { background: #2E3440; color: #D8DEE9; }
+.theme-nord .function-builtin { color: #88C0D0; }
+.theme-nord .function { color: #88C0D0; }
+.theme-nord .string { color: #A3BE8C; }
+.theme-nord .comment { color: #4C566A; font-style: italic; }
+.theme-nord .keyword { color: #81A1C1; }
+.theme-nord .keyword-control { color: #81A1C1; font-weight: bold; }
+.theme-nord .type { color: #8FBCBB; }
+.theme-nord .variable { color: #D8DEE9; }
+.theme-nord .constant { color: #B48EAD; }
+.theme-nord .literal { color: #D08770; }
+.theme-nord .line-number { color: #4C566A; }
+.theme-solarized-dark body { background: #002b36; color: #839496; }
+.theme-solarized-dark .function-builtin { color: #268BD2; }
+.theme-solarized-dark .function { color: #268BD2; }
+.theme-solarized-dark .string { color: #859900; }
+.theme-solarized-dark .comment { color: #586E75; font-style: italic; }
+.theme-solarized-dark .keyword { color: #CB4B16; }
+.theme-solarized-dark .keyword-control { color: #CB4B16; font-weight: bold; }
+.theme-solarized-dark .type { color: #B58900; }
+.theme-solarized-dark .variable { color: #93A1A1; }
+.theme-solarized-dark .constant { color: #6C71C4; }
+.theme-solarized-dark .literal { color: #DC322F; }
+.theme-solarized-dark .line-number { color: #586E75; }
+.theme-solarized-light body { background: #fdf6e3; color: #586e75; }
+.theme-solarized-light .function-builtin { color: #268BD2; }
+.theme-solarized-light .function { color: #268BD2; }
+.theme-solarized-light .string { color: #859900; }
+.theme-solarized-light .comment { color: #93A1A1; font-style: italic; }
+.theme-solarized-light .keyword { color: #CB4B16; }
+.theme-solarized-light .keyword-control { color: #CB4B16; font-weight: bold; }
+.theme-solarized-light .type { color: #B58900; }
+.theme-solarized-light .variable { color: #586E75; }
+.theme-solarized-light .constant { color: #6C71C4; }
+.theme-solarized-light .literal { color: #DC322F; }
+.theme-solarized-light .line-number { color: #93A1A1; }
+.theme-one-dark body { background: #282C34; color: #ABB2BF; }
+.theme-one-dark .function-builtin { color: #61AFEF; }
+.theme-one-dark .function { color: #61AFEF; }
+.theme-one-dark .string { color: #98C379; }
+.theme-one-dark .comment { color: #5C6370; font-style: italic; }
+.theme-one-dark .keyword { color: #C678DD; }
+.theme-one-dark .keyword-control { color: #C678DD; font-weight: bold; }
+.theme-one-dark .type { color: #E5C07B; }
+.theme-one-dark .variable { color: #ABB2BF; }
+.theme-one-dark .constant { color: #D19A66; }
+.theme-one-dark .literal { color: #E06C75; }
+.theme-one-dark .line-number { color: #5C6370; }
+.theme-monokai body { background: #272822; color: #F8F8F2; }
+.theme-monokai .function-builtin { color: #A6E22E; }
+.theme-monokai .function { color: #A6E22E; }
+.theme-monokai .string { color: #E6DB74; }
+.theme-monokai .comment { color: #75715E; font-style: italic; }
+.theme-monokai .keyword { color: #F92672; }
+.theme-monokai .keyword-control { color: #F92672; font-weight: bold; }
+.theme-monokai .type { color: #66D9EF; }
+.theme-monokai .variable { color: #F8F8F2; }
+.theme-monokai .constant { color: #AE81FF; }
+.theme-monokai .literal { color: #FD971F; }
+.theme-monokai .line-number { color: #75715E; }
+.theme-github-dark body { background: #22272E; color: #ADBAC7; }
+.theme-github-dark .function-builtin { color: #88B0EF; }
+.theme-github-dark .function { color: #88B0EF; }
+.theme-github-dark .string { color: #7BB97F; }
+.theme-github-dark .comment { color: #6A737D; font-style: italic; }
+.theme-github-dark .keyword { color: #D19A66; }
+.theme-github-dark .keyword-control { color: #D19A66; font-weight: bold; }
+.theme-github-dark .type { color: #E6C07B; }
+.theme-github-dark .variable { color: #C0CAF5; }
+.theme-github-dark .constant { color: #D19A66; }
+.theme-github-dark .literal { color: #F8F8F2; }
+.theme-github-dark .line-number { color: #6A737D; }
+</style>
+<script>
+function copyCode() {
+  const codeElement = document.getElementById('code-content');
+  if (codeElement) {
+    const textToCopy = Array.from(codeElement.children)
+      .map(lineDiv => lineDiv.textContent.replace(/^\s*\d+\s*│\s*/, ''))
+      .join('\n');
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => {
+        alert('Code copied to clipboard!');
+      })
+      .catch(err => {
+        console.error('Failed to copy code: ', err);
+        alert('Failed to copy code. See console for details.');
+      });
+  }
+}
+
+function applyTheme(themeName) {
+  document.body.className = 'theme-' + themeName;
+  localStorage.setItem('selectedTheme', themeName);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = localStorage.getItem('selectedTheme');
+  if (savedTheme) {
+    applyTheme(savedTheme);
+  } else {
+    applyTheme('default'); // Apply default theme on first load
+  }
+});
+</script>
+</head>
+<body class="theme-default">
+<div>
+  <button onclick="copyCode()" style="margin-right: 10px; padding: 8px 15px;">Copy Code</button>
+  <label for="theme-select">Theme:</label>
+  <select id="theme-select" onchange="applyTheme(this.value)" style="padding: 8px; border-radius: 4px;">
+    <option value="default" selected>default</option>
+    <option value="gruvbox">gruvbox</option>
+    <option value="tokyonight-night">tokyonight-night</option>
+    <option value="tokyonight-storm">tokyonight-storm</option>
+    <option value="catppuccin-mocha">catppuccin-mocha</option>
+    <option value="dracula">dracula</option>
+    <option value="nord">nord</option>
+    <option value="solarized-dark">solarized-dark</option>
+    <option value="solarized-light">solarized-light</option>
+    <option value="one-dark">one-dark</option>
+    <option value="monokai">monokai</option>
+    <option value="github-dark">github-dark</option>
+  </select>
+</div>
+<br>
+<div class="code-container">
+<pre><code id="code-content"><span class="keyword">import</span> <span class="variable">datetime</span>
+
+<span class="keyword">from</span> <span class="variable">test1_helper</span> <span class="keyword">import</span> <span class="variable">MyClass2</span>
+
+
+<span class="keyword">class</span> <span class="variable">MyClass</span>:
+    <span class="keyword">pass</span>
+
+
+<span class="keyword">if</span> <span class="variable">__name__</span> == <span class="string">"__main__"</span>:
+    <span class="variable">class1</span> = <span class="function">MyClass</span>()
+    <span class="variable">class2</span> = <span class="function">MyClass2</span>()
+</code></pre>
+</div>
+</body></html>
