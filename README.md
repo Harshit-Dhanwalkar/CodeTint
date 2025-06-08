@@ -73,44 +73,10 @@ To get `CodeTint` up and running, follow these steps:
     Navigate back to your project's root directory (`CodeTint/`). Use the following `gcc` command to compile `CodeTint`. This command includes common warning flags (`-Wall`, `-Wextra`), debugging information (`-g`), links the necessary Tree-sitter source files and grammars, and embeds the runtime path for `libcodeimage.so`:
 
     ```bash
-    gcc -Wall -Wextra -g \
-        -Imodules \
-        -Imodules/stb \
-        -I./tree-sitter/lib/include \
-        -I./tree-sitter-python/src \
-        -I./tree-sitter-c/src \
-        -I./tree-sitter-cpp/src \
-        -I./tree-sitter-javascript/src \
-        -I./tree-sitter-html/src \
-        -I./tree-sitter-css/src \
-        codetint.c modules/theme.c \
-        ./tree-sitter/lib/src/lib.c \
-        ./tree-sitter-python/src/parser.c \
-        ./tree-sitter-python/src/scanner.c \
-        ./tree-sitter-c/src/parser.c \
-        ./tree-sitter-cpp/src/parser.c \
-        ./tree-sitter-cpp/src/scanner.c \
-        ./tree-sitter-javascript/src/parser.c \
-        ./tree-sitter-javascript/src/scanner.c \
-        ./tree-sitter-html/src/parser.c \
-        ./tree-sitter-html/src/scanner.c \
-        ./tree-sitter-css/src/parser.c \
-        ./tree-sitter-css/src/scanner.c \
-        -Lmodules \
-        -lcodeimage \
-        -lm \
-        -Wl,-rpath=. \
-        -o codetint
+    gcc -Wall -Wextra -g -Imodules -Imodules/stb -I./tree-sitter/lib/include -I./tree-sitter-python/src -I./tree-sitter-c/src -I./tree-sitter-cpp/src -I./tree-sitter-javascript/src -I./tree-sitter-html/src -I./tree-sitter-css/src codetint.c modules/theme.c ./tree-sitter/lib/src/lib.c ./tree-sitter-python/src/parser.c ./tree-sitter-python/src/scanner.c ./tree-sitter-c/src/parser.c ./tree-sitter-cpp/src/parser.c ./tree-sitter-cpp/src/scanner.c ./tree-sitter-javascript/src/parser.c ./tree-sitter-javascript/src/scanner.c ./tree-sitter-html/src/parser.c ./tree-sitter-html/src/scanner.c ./tree-sitter-css/src/parser.c ./tree-sitter-css/src/scanner.c -Lmodules -lcodeimage -lm -Wl,-rpath,'$ORIGIN/modules' -o codetint
     ```
 
-    - The `-Wl,-rpath=.` flag ensures that the `codetint` executable can find `libcodeimage.so` at runtime if it's copied to the same directory.
-
-6.  **Copy Shared Library for Runtime:**
-    For the `codetint` executable to find `libcodeimage.so` when you run it, copy the compiled shared library to the main `CodeTint` directory:
-
-    ```bash
-    cp modules/libcodeimage.so .
-    ```
+    - The `-Wl,-rpath,'$ORIGIN/modules'` flag ensures that the `codetint` executable can find `libcodeimage.so` at runtime, assuming it remains in the `modules/` directory relative to the executable.
 
 Your `CodeTint` executable is now ready to use!
 
@@ -130,7 +96,7 @@ To highlight a Python file and display it directly in your terminal:
 
 ### Options
 
-- **`-i FILE`**: Input code file to convert (e.g., `my_script.c`). **This is a mandatory option.**
+- **`-i FILE`**: Input code file to convert (e.g., `my_script.c`). **This is a mandatory option for image generation.**
 - **`-f FONT_NAME`**: Selects a specific font by its discovered name (e.g., `JetBrainsMono-Regular`, `FiraCode-Regular`). Run `./codetint --image-out /dev/null --help` to see a list of available fonts.
 - **`-fs SIZE`**: Sets the font size in pixels for image output (e.g., `-fs 24`).
 - **`-w WIDTH`**: Sets the image width in pixels (default: calculated based on content, or 200 if no content).
@@ -152,39 +118,20 @@ To highlight a Python file and display it directly in your terminal:
 
 **1. Generate an image from a Python script with JetBrains Mono font:**
 
-First, create a sample Python file at `examples/test.py`:
-
-```python
-# examples/test.py
-def greet(name):
-    """
-    This function greets the given name.
-    """
-    message = f"Hello, {name}!"
-    print(message)
-    # A quick loop
-    for i in range(3):
-        print(i)
-
-if __name__ == "__main__":
-    greet("World")
-    # End of script
-```
-
-Then, run the `CodeTint` utility from your project root:
+This example assumes you have a sample Python file located at `examples/test1.py` within your project:
 
 ```bash
-./codetint examples/test.py --image-out examples/output.png --image-font "JetBrainsMono-Regular" --image-fs 20
+./codetint examples/test1.py --image-out examples/output.png --image-font "JetBrainsMono-Regular" --image-fs 18
 ```
 
-This command will read `examples/test.py`, render its content using the `JetBrainsMono-Regular` font at 20px size, and save the output to `examples/output.png`. The image will have a width of 800 pixels and a height of 400 pixels (or automatically calculated if `-w`/`-h` are not provided).
+This command will read `examples/test1.py`, render its content using the `JetBrainsMono-Regular` font at 18px size, and save the output to `examples/output.png`. The image dimensions will be automatically calculated to fit the code content unless overridden by `-w` and `-h`.
 
 **Example Output Image (Conceptual, without actual syntax highlighting yet):**
 
 ![Example Output Image](examples/output.png)
 _(Note: Ensure you've placed your generated `output.png` into the `examples/` directory in your GitHub repo for this link to work.)_
 
-The image will display the Python code with a dark background and white text, automatically sized to fit the content if `-w` and `-h` are not explicitly set (or constrained by them if they are).
+The image will display the Python code with a dark background and white text.
 
 **2. See available fonts:**
 
