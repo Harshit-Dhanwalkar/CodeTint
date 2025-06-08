@@ -19,3 +19,6 @@
 [submodule "tree-sitter-css"]
 	path = tree-sitter-css
 	url = https://github.com/tree-sitter/tree-sitter-css.git
+[submodule "modules/stb"]
+	path = modules/stb
+	url = https://github.com/nothings/stb.git
