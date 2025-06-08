@@ -2,9 +2,11 @@
 
 ## Introduction
 
-`CodeTint` is a lightweight and powerful command-line utility designed for fast and accurate syntax highlighting of source code. Built entirely in C and leveraging the robust parsing capabilities of **Tree-sitter**, `CodeTint` provides highly detailed and precise highlighting. Currently, it offers comprehensive support for **Python** code, transforming plain text into visually appealing, color-coded output.
+`CodeTint` is a lightweight and powerful command-line utility designed for fast and accurate syntax highlighting of source code. Built entirely in C and leveraging the robust parsing capabilities of **Tree-sitter**, `CodeTint` provides highly detailed and precise highlighting. Currently, it offers comprehensive support for various programming languages, transforming plain text into visually appealing, color-coded output.
 
-Functioning much like the classic `cat` command, `CodeTint` reads your source files and outputs their content, but with the added benefit of beautiful syntax highlighting. You can choose to display the highlighted code directly in your terminal using **ANSI escape codes**, or generate **HTML** output for web integration or browser viewing. `CodeTint` aims to provide a quick, efficient, and visually enhanced way to view your code.
+Functioning much like the classic `cat` command, `CodeTint` reads your source files and outputs their content, but with the added benefit of beautiful syntax highlighting. You can choose to display the highlighted code directly in your terminal using **ANSI escape codes**, generate **HTML** output for web integration or browser viewing, or even create **PNG images** of your code snippets. `CodeTint` aims to provide a quick, efficient, and visually enhanced way to view your code.
+
+---
 
 ## Installation
 
@@ -14,8 +16,6 @@ To get `CodeTint` up and running, follow these steps:
 
 - **C Compiler:** You'll need a C compiler like GCC or Clang.
 - **Git:** To clone the repository and its submodules.
-- **Tree-sitter Library:** `CodeTint` depends on the core Tree-sitter library.
-- **Tree-sitter Python Grammar:** The specific grammar for parsing Python code.
 
 ### Build Steps
 
@@ -23,27 +23,59 @@ To get `CodeTint` up and running, follow these steps:
     Start by cloning the `CodeTint` repository from GitHub:
 
     ```bash
-    git clone [https://github.com/your-username/CodeTint.git](https://github.com/your-username/CodeTint.git)
+    git clone [https://github.com/Harshit-Dhanwalkar/CodeTint.git](https://github.com/Harshit-Dhanwalkar/CodeTint.git)
     cd CodeTint
     ```
 
-    (Remember to replace `your-username/CodeTint.git` with your actual repository URL.)
-
 2.  **Initialize Submodules:**
-    `CodeTint` uses Git submodules for `tree-sitter` and `tree-sitter-python`. Initialize and update them:
+    `CodeTint` uses Git submodules for `tree-sitter`, various `tree-sitter-*` grammars, and the `stb` library (used by `libcodeimage`). Initialize and update them:
 
     ```bash
     git submodule update --init --recursive
     ```
 
-    This will download the necessary Tree-sitter core library and the Python grammar.
+    This will download the necessary Tree-sitter core library, language grammars, and the `stb` library into their respective subdirectories.
 
-3.  **Compile the Application:**
-    Navigate to your project's root directory. Use the following `gcc` command to compile `CodeTint`. This command includes common warning flags (`-Wall`, `-Wextra`), debugging information (`-g`), and directly links the necessary Tree-sitter source files and grammar:
+3.  **Prepare Fonts:**
+    For the image generation feature, you need to place your desired TrueType Font (`.ttf`) files inside the `modules/Fonts/` directory. `CodeTint` will discover these fonts when generating images.
+
+    For example, if you downloaded `JetBrainsMono-2.304.zip` and `Fira_Code_v6.2.zip`, extract the `.ttf` files into subdirectories like:
+
+    ```
+    CodeTint/
+    └── modules/
+        └── Fonts/
+            ├── JetBrainsMono-2.304/
+            │   └── JetBrainsMono-Regular.ttf
+            ├── Fira_Code_v6.2/
+            │   └── FiraCode-Regular.ttf
+            └── ... (other .ttf files)
+    ```
+
+    - **JetBrains Mono:** Available from [https://www.jetbrains.com/lp/mono/](https://www.jetbrains.com/lp/mono/)
+    - **Fira Code:** Available from [https://github.com/tonsky/FiraCode](https://github.com/tonsky/FiraCode)
+
+4.  **Compile `libcodeimage.so` (Image Generation Library):**
+    This is a shared library that `CodeTint` links against for image generation. Navigate to the `modules/` directory and compile it:
+
+    ```bash
+    cd modules/
+    gcc -Wall -Wextra -g -fPIC -shared \
+        -I. \
+        -I./stb \
+        libcodeimage.c \
+        -o libcodeimage.so \
+        -lm
+    cd .. # Go back to the CodeTint root directory
+    ```
+
+5.  **Compile the Main `CodeTint` Application:**
+    Navigate back to your project's root directory (`CodeTint/`). Use the following `gcc` command to compile `CodeTint`. This command includes common warning flags (`-Wall`, `-Wextra`), debugging information (`-g`), links the necessary Tree-sitter source files and grammars, and embeds the runtime path for `libcodeimage.so`:
 
     ```bash
     gcc -Wall -Wextra -g \
         -Imodules \
+        -Imodules/stb \
         -I./tree-sitter/lib/include \
         -I./tree-sitter-python/src \
         -I./tree-sitter-c/src \
@@ -64,11 +96,25 @@ To get `CodeTint` up and running, follow these steps:
         ./tree-sitter-html/src/scanner.c \
         ./tree-sitter-css/src/parser.c \
         ./tree-sitter-css/src/scanner.c \
+        -Lmodules \
+        -lcodeimage \
+        -lm \
+        -Wl,-rpath=. \
         -o codetint
     ```
 
-    - This command assumes `codetint.c` is in the same directory where you run `gcc`, and that `tree-sitter` and `tree-sitter-python` are submodules cloned into the root of your project.
-    - It directly compiles the Tree-sitter core's `lib.c` and the Python grammar's `parser.c` and `scanner.c` alongside your main `codetint.c`.
+    - The `-Wl,-rpath=.` flag ensures that the `codetint` executable can find `libcodeimage.so` at runtime if it's copied to the same directory.
+
+6.  **Copy Shared Library for Runtime:**
+    For the `codetint` executable to find `libcodeimage.so` when you run it, copy the compiled shared library to the main `CodeTint` directory:
+
+    ```bash
+    cp modules/libcodeimage.so .
+    ```
+
+Your `CodeTint` executable is now ready to use!
+
+---
 
 ## Usage
 
@@ -82,31 +128,83 @@ To highlight a Python file and display it directly in your terminal:
 ./codetint <your_python_file.py>
 ```
 
-## Specifying a Color Theme
+### Options
 
-You can choose from several built-in color themes using the -c option:
+- **`-i FILE`**: Input code file to convert (e.g., `my_script.c`). **This is a mandatory option.**
+- **`-f FONT_NAME`**: Selects a specific font by its discovered name (e.g., `JetBrainsMono-Regular`, `FiraCode-Regular`). Run `./codetint --image-out /dev/null --help` to see a list of available fonts.
+- **`-fs SIZE`**: Sets the font size in pixels for image output (e.g., `-fs 24`).
+- **`-w WIDTH`**: Sets the image width in pixels (default: calculated based on content, or 200 if no content).
+- **`-h HEIGHT`**: Sets the image height in pixels (default: calculated based on content, or 100 if no content).
+- **`OUTPUT_PATH.png`**: (Positional argument) Specifies the output filename and path for the image (e.g., `my_custom_code.png`). If omitted, defaults to `highlighted_code.png`.
+- **`-c THEME`**: Selects a color theme (default: `default`).
+- **`-l LANG`**: Explicitly sets the language (e.g., `python`, `c`, `javascript`). Overrides file extension detection.
+- **`-o FILE`**: Outputs to a file instead of `stdout` (for HTML/ANSI).
+- **`--html`**: Outputs HTML instead of ANSI colors.
+- **`-n, --line-numbers`**: Shows line numbers.
+- **`--image-out FILE`**: Generates image output (PNG) to FILE.
+- **`--image-font FONT_NAME`**: Specifies the font for image output (e.g., `JetBrainsMono-Regular`).
+- **`--image-fs SIZE`**: Sets the font size for image output (e.g., `24.0`).
+- **`--image-w WIDTH`**: Sets image width (0 for auto-calculation).
+- **`--image-h HEIGHT`**: Sets image height (0 for auto-calculation).
+- **`--help` or `-u`**: Displays the usage information.
 
-```bash
-./codetint -c tokyonight-night examples/test1.py
+### Examples
+
+**1. Generate an image from a Python script with JetBrains Mono font:**
+
+First, create a sample Python file at `examples/test.py`:
+
+```python
+# examples/test.py
+def greet(name):
+    """
+    This function greets the given name.
+    """
+    message = f"Hello, {name}!"
+    print(message)
+    # A quick loop
+    for i in range(3):
+        print(i)
+
+if __name__ == "__main__":
+    greet("World")
+    # End of script
 ```
 
-Available themes: default, `gruvbox`, `tokyonight-night`, `tokyonight-storm`, `catppuccin-mocha`, `dracula`, `nord`, `solarized-dark`, `solarized-light`, `one-dark`, `monokai`, `github-dark`
-
-## Outputting to HTML
-
-To generate HTML output for embedding in web pages or viewing in a browser, use the `--html` flag and redirect the output to an HTML file:
+Then, run the `CodeTint` utility from your project root:
 
 ```bash
-./codetint -q custom-highlights.scm your_code.py
+./codetint examples/test.py --image-out examples/output.png --image-font "JetBrainsMono-Regular" --image-fs 20
 ```
 
-Example: Highlighting a Python file with a specific theme
+This command will read `examples/test.py`, render its content using the `JetBrainsMono-Regular` font at 20px size, and save the output to `examples/output.png`. The image will have a width of 800 pixels and a height of 400 pixels (or automatically calculated if `-w`/`-h` are not provided).
+
+**Example Output Image (Conceptual, without actual syntax highlighting yet):**
+
+![Example Output Image](examples/output.png)
+_(Note: Ensure you've placed your generated `output.png` into the `examples/` directory in your GitHub repo for this link to work.)_
+
+The image will display the Python code with a dark background and white text, automatically sized to fit the content if `-w` and `-h` are not explicitly set (or constrained by them if they are).
+
+**2. See available fonts:**
+
+Due to how `libcodeimage` discovers fonts, you can trigger its font discovery and list them by running:
 
 ```bash
-./codetint -c dracula my_script.py
+./codetint --image-out /dev/null --help
 ```
 
-# TODO
+(The `--image-out /dev/null` part prevents it from trying to write an actual image, just triggering the font discovery path.)
+
+---
+
+## Adding More Fonts
+
+Simply place your `.ttf` font files into the `modules/Fonts/` directory or any of its subdirectories. The utility will automatically discover them and list them when you run `./codetint --image-out /dev/null --help`.
+
+---
+
+## TODO
 
 Here are some features and improvements planned for CodeTint:
 
@@ -121,18 +219,22 @@ Here are some features and improvements planned for CodeTint:
   - [ ] bash
   - [ ] lua
 - [x] Add line numbers: Implement an option to display line numbers alongside the highlighted code.
-- [x] Optimize code by separating themes: Move theme definitions from main.c into separate files or a more modular structure for easier management and extensibility.
-- [ ] Allow piping output into a code block image: Add the ability to pipe the output of `CodeTint` into a tool that generates an image of the highlighted code block. This would be useful for embedding code snippets in environments that don't support HTML or ANSI codes.
-- [ ] Support for incremental parsing (Live Update): Extend this tool to watch files for changes and update highlighting live. This would involve using ts_parser_parse and re-parsing only changed parts for efficiency.
-- [ ] Support for piping input: Allow CodeTint to read code directly from standard input (stdin), enabling use in pipelines (e.g., cat file.py | ./codetint).
+- [x] Optimize code by separating themes: Move theme definitions from `main.c` into separate files or a more modular structure for easier management and extensibility.
+- [x] Allow piping output into a code block image: Integrate image generation directly into the tool via `libcodeimage.so`.
+- [ ] Support for incremental parsing (Live Update): Extend this tool to watch files for changes and update highlighting live. This would involve using `ts_parser_parse` and re-parsing only changed parts for efficiency.
+- [ ] Support for piping input: Allow `CodeTint` to read code directly from standard input (`stdin`), enabling use in pipelines (e.g., `cat file.py | ./codetint`).
 - [ ] External theme configuration: Implement a mechanism to load themes from external configuration files (e.g., JSON, YAML) without recompilation.
-- [ ] Configuration file support: Add a configuration file (e.g., .codetintrc) for default settings, such as preferred theme or default language.
+- [ ] Configuration file support: Add a configuration file (e.g., `.codetintrc`) for default settings, such as preferred theme or default language.
 - [ ] More robust error handling: Improve error messages and handling for file operations, parsing, and invalid arguments.
 - [ ] Support for different line ending styles: Ensure correct rendering across various operating systems (Windows, Linux, macOS).
 - [ ] Packaging and Distribution: Explore options for easier installation via package managers.
 
+---
+
 ## FIXES
 
-- [x] Output html is not showing color when applied colorsheme using dropdown menu.
+- [x] Output HTML is not showing color when applied colorscheme using dropdown menu.
 - [x] Dark background
-- [ ] Fix copy to clipboard button in html
+- [ ] Fix copy to clipboard button in HTML
+
+---

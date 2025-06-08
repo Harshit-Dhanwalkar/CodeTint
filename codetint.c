@@ -5,6 +5,7 @@
 #include <tree_sitter/api.h>
 
 #include "modules/theme.h"
+#include "libcodeimage.h"
 
 // External Tree-sitter language functions
 const TSLanguage *tree_sitter_python(void);
@@ -163,7 +164,15 @@ int main(int argc, char **argv) {
     const char *explicit_lang_name = NULL;
     bool output_html = false;
     bool show_line_numbers = false;
-    
+
+    // Variables for image output
+    bool generate_image = false;
+    const char *image_output_path = NULL;
+    const char *image_font_name = NULL;
+    float image_font_size = 18.0f;
+    int image_width = 0; // 0 means auto
+    int image_height = 0; // 0 means auto
+
     LanguageInfo *current_lang_info = NULL;
 
     // Parse arguments
@@ -187,6 +196,18 @@ int main(int argc, char **argv) {
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--line-numbers") == 0) {
             show_line_numbers = true;
         }
+        else if (strcmp(argv[i], "--image-out") == 0 && i + 1 < argc) {
+            generate_image = true;
+            image_output_path = argv[++i];
+        } else if (strcmp(argv[i], "--image-font") == 0 && i + 1 < argc) {
+            image_font_name = argv[++i];
+        } else if (strcmp(argv[i], "--image-fs") == 0 && i + 1 < argc) {
+            image_font_size = atof(argv[++i]);
+        } else if (strcmp(argv[i], "--image-w") == 0 && i + 1 < argc) {
+            image_width = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--image-h") == 0 && i + 1 < argc) {
+            image_height = atoi(argv[++i]);
+        }
         else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
             print_usage(argv[0]);
             return 0;
@@ -204,6 +225,31 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // --- Image Generation Logic ---
+    if (generate_image) {
+        if (!image_output_path) {
+            fprintf(stderr, "Error: --image-out requires an output file path.\n");
+            print_usage(argv[0]);
+            return 1;
+        }
+        // Call the library function
+        int result = code_to_image_generate(
+            input_file,
+            image_output_path,
+            image_font_name,
+            image_font_size,
+            image_width,
+            image_height
+        );
+        if (result == 0) {
+            printf("Successfully generated image '%s' from '%s'.\n", image_output_path, input_file);
+        } else {
+            fprintf(stderr, "Failed to generate image '%s'.\n", image_output_path);
+        }
+        return result;
+    }
+
+    // --- HTML/ANSI Generation Logic (only if not generating image) ---
     if (explicit_lang_name) {
         current_lang_info = get_language_info_from_name(explicit_lang_name);
         if (!current_lang_info) {
