@@ -14,6 +14,9 @@ const TSLanguage *tree_sitter_cpp(void);
 const TSLanguage *tree_sitter_javascript(void);
 const TSLanguage *tree_sitter_html(void);
 const TSLanguage *tree_sitter_css(void);
+const TSLanguage *tree_sitter_rust(void);
+const TSLanguage *tree_sitter_bash(void);
+// const TSLanguage *tree_sitter_lua(void);
 
 // Structure to hold language information and associated parser and default query
 typedef struct {
@@ -30,7 +33,10 @@ LanguageInfo supported_languages[] = {
     {"javascript", ".js", tree_sitter_javascript, "queries/javascript.scm"},
     {"html", ".html", tree_sitter_html, "queries/html.scm"},
     {"css", ".css", tree_sitter_css, "queries/css.scm"},
-    {NULL, NULL, NULL, NULL} // Sentinel to mark the end of the array
+    {"rust", ".rs", tree_sitter_rust, "queries/rust.scm"},
+    {"bash", ".sh", tree_sitter_bash, "queries/bash.scm"},
+    // {"lua", ".lua", tree_sitter_lua, "queries/lua.scm"},
+    {NULL, NULL, NULL, NULL}
 };
 
 

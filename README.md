@@ -183,5 +183,6 @@ Here are some features and improvements planned for CodeTint:
 - [x] Output HTML is not showing color when applied colorscheme using dropdown menu.
 - [x] Dark background
 - [ ] Fix copy to clipboard button in HTML
+- [ ] Code-to-Image output does not show syntax highlighting.
 
 ---
