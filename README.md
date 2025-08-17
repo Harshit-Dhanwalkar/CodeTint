@@ -2,42 +2,55 @@
 
 ## Introduction
 
-`CodeTint` is a lightweight and powerful command-line utility designed for fast and accurate syntax highlighting of source code. Built entirely in C and leveraging the robust parsing capabilities of **Tree-sitter**, `CodeTint` provides highly detailed and precise highlighting. Currently, it offers comprehensive support for various programming languages, transforming plain text into visually appealing, color-coded output.
+`CodeTint` is a lightweight, powerful command-line utility for fast and accurate syntax highlighting of source code. Built in C with **Tree-sitter** parsing, it transforms plain text into beautifully highlighted output with support for:
 
-Functioning much like the classic `cat` command, `CodeTint` reads your source files and outputs their content, but with the added benefit of beautiful syntax highlighting. You can choose to display the highlighted code directly in your terminal using **ANSI escape codes**, generate **HTML** output for web integration or browser viewing, or even create **PNG images** of your code snippets. `CodeTint` aims to provide a quick, efficient, and visually enhanced way to view your code.
+- **Terminal display** (ANSI colors)
+- **HTML output** (for web/browser viewing)
+- **PNG image generation** (for sharing code snippets)
+- **Interactive pager mode** (for long files)
 
----
+## Key Features
+
+- 🚀 **Blazing fast** parsing and highlighting
+- 🌈 **Multiple color themes** included
+- 📜 **Interactive pager** for large files (like `less`)
+- 📊 **Line number** support
+- 🖼️ **Code-to-image** conversion
+- 💻 **Cross-platform** (Linux, macOS, WSL)
 
 ## Installation
-
-To get `CodeTint` up and running, follow these steps:
 
 ### Prerequisites
 
 - **C Compiler:** You'll need a C compiler like GCC or Clang.
 - **Git:** To clone the repository and its submodules.
 
-### Build Steps
+  ```bash
+  sudo apt-get update
+  sudo apt-get install libx11-dev libfontconfig1-dev libharfbuzz-dev libpng-dev libfreetype-dev
+  ```
+
+### Building from Source
 
 1.  **Clone the Repository:**
-    Start by cloning the `CodeTint` repository from GitHub:
 
     ```bash
     git clone https://github.com/Harshit-Dhanwalkar/CodeTint.git
     cd CodeTint
-    ```
-
-2.  **Initialize Submodules:**
-    `CodeTint` uses Git submodules for `tree-sitter`, various `tree-sitter-*` grammars, and the `stb` library. Initialize and update them:
-
-    ```bash
     git submodule update --init --recursive
     ```
 
     This will download the necessary Tree-sitter core library, language grammars, and the `stb` headers into their respective subdirectories.
 
-3.  **Prepare Fonts:**
+2.  **Prepare Fonts:**
     For the image generation feature, you need to place your desired TrueType Font (`.ttf`) files inside the `modules/Fonts/` directory. `CodeTint` will discover these fonts when generating images.
+
+    - **JetBrains Mono:** Available from [https://www.jetbrains.com/lp/mono/](https://www.jetbrains.com/lp/mono/)
+    - **Fira Code:** Available from [https://github.com/tonsky/FiraCode](https://github.com/tonsky/FiraCode)
+    - **Hack:** Available from [https://sourcefoundry.org/hack/](https://sourcefoundry.org/hack/)
+    - **Monoid:** Available from [https://larsenwork.com/monoid/](https://larsenwork.com/monoid/)
+    - **Input Mono:** Available from [https://input.djr.com/download/](https://input.djr.com/download/)
+    - **Space Mono:** Available from [https://fonts.google.com/specimen/Space+Mono](https://fonts.google.com/specimen/Space+Mono)
 
     For example, if you downloaded `JetBrainsMono-2.304.zip`, `Fira_Code_v6.2.zip`, `Hack-v3.003-ttf.zip`, `Monoid.zip`, `Input-Font.zip`, and `Space_Mono.zip`, extract the `.ttf` files into subdirectories like:
 
@@ -60,23 +73,28 @@ To get `CodeTint` up and running, follow these steps:
             └── ... (other .ttf files)
     ```
 
-    - **JetBrains Mono:** Available from [https://www.jetbrains.com/lp/mono/](https://www.jetbrains.com/lp/mono/)
-    - **Fira Code:** Available from [https://github.com/tonsky/FiraCode](https://github.com/tonsky/FiraCode)
-    - **Hack:** Available from [https://sourcefoundry.org/hack/](https://sourcefoundry.org/hack/)
-    - **Monoid:** Available from [https://larsenwork.com/monoid/](https://larsenwork.com/monoid/)
-    - **Input Mono:** Available from [https://input.djr.com/download/](https://input.djr.com/download/)
-    - **Space Mono:** Available from [https://fonts.google.com/specimen/Space+Mono](https://fonts.google.com/specimen/Space+Mono)
-
-4.  **Compile the Main `CodeTint` Application:**
-    Navigate back to your project's root directory (`CodeTint/`). Use the following `gcc` command to compile `CodeTint`. This command includes common warning flags (`-Wall`, `-Wextra`), debugging information (`-g`), and links all the necessary Tree-sitter source files and grammars, along with `libcodeimage.c` and `modules/theme.c` directly:
-
+3.  **Compile**
     ```bash
-    gcc -Wall -Wextra -g -Imodules -Imodules/stb -I./tree-sitter/lib/include -I./tree-sitter-python/src -I./tree-sitter-c/src -I./tree-sitter-cpp/src/ -I./tree-sitter-javascript/src -I./tree-sitter-html/src -I./tree-sitter-css/src -I./tree-sitter-rust/src -I./tree-sitter-bash/src codetint.c modules/theme.c modules/libcodeimage.c ./tree-sitter/lib/src/lib.c ./tree-sitter-python/src/parser.c ./tree-sitter-python/src/scanner.c ./tree-sitter-c/src/parser.c ./tree-sitter-cpp/src/parser.c ./tree-sitter-cpp/src/scanner.c ./tree-sitter-javascript/src/parser.c ./tree-sitter-javascript/src/scanner.c ./tree-sitter-html/src/parser.c ./tree-sitter-html/src/scanner.c ./tree-sitter-css/src/parser.c ./tree-sitter-css/src/scanner.c ./tree-sitter-rust/src/parser.c ./tree-sitter-rust/src/scanner.c ./tree-sitter-bash/src/parser.c ./tree-sitter-bash/src/scanner.c -lm -o codetint
+    gcc -Wall -Wextra -g -Imodules -Imodules/stb -I./tree-sitter/lib/include -I./tree-sitter-python/src -I./tree-sitter-c/src -I./tree-sitter-cpp/src/ -I./tree-sitter-javascript/src -I./tree-sitter-html/src -I./tree-sitter-css/src -I./tree-sitter-rust/src -I./tree-sitter-bash/src codetint.c modules/theme.c modules/libcodeimage.c ./tree-sitter/lib/src/lib.c ./tree-sitter-python/src/parser.c ./tree-sitter-python/src/scanner.c ./tree-sitter-c/src/parser.c ./tree-sitter-cpp/src/parser.c ./tree-sitter-cpp/src/scanner.c ./tree-sitter-javascript/src/parser.c ./tree-sitter-javascript/src/scanner.c ./tree-sitter-html/src/parser.c ./tree-sitter-html/src/scanner.c ./tree-sitter-css/src/parser.c ./tree-sitter-css/src/scanner.c ./tree-sitter-rust/src/parser.c ./tree-sitter-rust/src/scanner.c ./tree-sitter-bash/src/parser.c ./tree-sitter-bash/src/scanner.c -lm -o codetint -lX11 -lfontconfig -lharfbuzz -lpng -lfreetype
     ```
 
-Your `CodeTint` executable is now ready to use!
-
 ---
+
+## Supported Languages
+
+Currently `CodeTint` supports limited languages:
+
+1.  Python (`.py`)
+2.  C/C++ (`.c`, `.cpp`, `.h`)
+3.  JavaScript (`.js`)
+4.  HTML (`.html`)
+5.  CSS (`.css`)
+6.  Rust (`.rs`)
+7.  Bash (`.sh`)
+
+## Themes
+
+Available themes: `default`, `nord`, `dracula`, `gruvbox`, `one-dark`, `monokai`, `solarized-dark`, `solarized-light`
 
 ## Usage
 
@@ -92,23 +110,36 @@ To highlight a file and display it directly in your terminal:
 
 ### Options
 
-- **`-i FILE`**: Input code file to convert (e.g., `my_script.c`). **This is a mandatory option for image generation.**
-- **`-f FONT_NAME`**: Selects a specific font by its discovered name (e.g., `JetBrainsMono-Regular`, `FiraCode-Regular`). Run `./codetint --image-out /dev/null --help` to see a list of available fonts.
-- **`-fs SIZE`**: Sets the font size in pixels for image output (e.g., `-fs 24`).
-- **`-w WIDTH`**: Sets the image width in pixels (default: calculated based on content, or 200 if no content).
-- **`-h HEIGHT`**: Sets the image height in pixels (default: calculated based on content, or 100 if no content).
-- **`OUTPUT_PATH.png`**: (Positional argument) Specifies the output filename and path for the image (e.g., `my_custom_code.png`). If omitted, defaults to `highlighted_code.png`.
-- **`-c THEME`**: Selects a color theme (default: `default`).
-- **`-l LANG`**: Explicitly sets the language (e.g., `python`, `c`, `javascript`). Overrides file extension detection.
-- **`-o FILE`**: Outputs to a file instead of `stdout` (for HTML/ANSI).
-- **`--html`**: Outputs HTML instead of ANSI colors.
-- **`-n, --line-numbers`**: Shows line numbers.
-- **`--image-out FILE`**: Generates image output (PNG) to FILE.
-- **`--image-font FONT_NAME`**: Specifies the font for image output (e.g., `JetBrainsMono-Regular`).
-- **`--image-fs SIZE`**: Sets the font size for image output (e.g., `24.0`).
-- **`--image-w WIDTH`**: Sets image width (0 for auto-calculation).
-- **`--image-h HEIGHT`**: Sets image height (0 for auto-calculation).
-- **`--help` or `-u`**: Displays the usage information.
+| Option                       | Description                                                               |
+| :--------------------------- | :------------------------------------------------------------------------ |
+| **`-i FILE`**                | Input code file for image generation (mandatory for image generation).    |
+| **`-f FONT_NAME`**           | Selects a specific font for image output (e.g., `JetBrainsMono-Regular`). |
+| **`-fs SIZE`**               | Sets the font size in pixels for image output (e.g., `24`).               |
+| **`-w WIDTH`**               | Sets the image width in pixels (default: calculated).                     |
+| **`-h HEIGHT`**              | Sets the image height in pixels (default: calculated).                    |
+| **`-p, --pager`**            | Uses an interactive pager for long files.                                 |
+| **`-c THEME`**               | Selects a color theme (default: `default`).                               |
+| **`-l LANG`**                | Explicitly sets the language, overriding file extension.                  |
+| **`-o FILE`**                | Outputs to a file instead of `stdout`.                                    |
+| **`--html`**                 | Outputs HTML format.                                                      |
+| **`-n, --line-numbers`**     | Shows line numbers.                                                       |
+| **`--image-out FILE`**       | Generates image output (PNG) to a specified file.                         |
+| **`--image-font FONT_NAME`** | Specifies the font for image output.                                      |
+| **`--image-fs SIZE`**        | Sets the font size for image output.                                      |
+| **`--image-w WIDTH`**        | Sets image width (0 for auto-calculation).                                |
+| **`--image-h HEIGHT`**       | Sets image height (0 for auto-calculation).                               |
+| **`--help` or `-u`**         | Displays usage information.                                               |
+
+#### Pager Mode Navigation
+
+When using `-p` flag:
+| Key | Action |
+| :--- | :--- |
+| **Space** | Next page |
+| **b** | Previous page |
+| **j** | Down one line |
+| **k** | Up one line |
+| **q** | Quit |
 
 ### Examples
 
@@ -212,3 +243,7 @@ Here are some features and improvements planned for CodeTint:
 - [ ] Code-to-Image output does not show syntax highlighting.
 
 ---
+
+```
+
+```
