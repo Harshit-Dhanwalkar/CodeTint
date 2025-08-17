@@ -24,7 +24,7 @@
 
 - **C Compiler:** You'll need a C compiler like GCC or Clang.
 - **Git:** To clone the repository and its submodules.
-
+- Installing other important dependencies, for debian using apt package manager:
   ```bash
   sudo apt-get update
   sudo apt-get install libx11-dev libfontconfig1-dev libharfbuzz-dev libpng-dev libfreetype-dev
@@ -74,9 +74,10 @@
     ```
 
 3.  **Compile**
-    ```bash
-    gcc -Wall -Wextra -g -Imodules -Imodules/stb -I./tree-sitter/lib/include -I./tree-sitter-python/src -I./tree-sitter-c/src -I./tree-sitter-cpp/src/ -I./tree-sitter-javascript/src -I./tree-sitter-html/src -I./tree-sitter-css/src -I./tree-sitter-rust/src -I./tree-sitter-bash/src codetint.c modules/theme.c modules/libcodeimage.c ./tree-sitter/lib/src/lib.c ./tree-sitter-python/src/parser.c ./tree-sitter-python/src/scanner.c ./tree-sitter-c/src/parser.c ./tree-sitter-cpp/src/parser.c ./tree-sitter-cpp/src/scanner.c ./tree-sitter-javascript/src/parser.c ./tree-sitter-javascript/src/scanner.c ./tree-sitter-html/src/parser.c ./tree-sitter-html/src/scanner.c ./tree-sitter-css/src/parser.c ./tree-sitter-css/src/scanner.c ./tree-sitter-rust/src/parser.c ./tree-sitter-rust/src/scanner.c ./tree-sitter-bash/src/parser.c ./tree-sitter-bash/src/scanner.c -lm -o codetint -lX11 -lfontconfig -lharfbuzz -lpng -lfreetype
-    ```
+    `bash
+make
+`
+    Note: For more see [Makefile](Makefile)
 
 ---
 
@@ -244,6 +245,4 @@ Here are some features and improvements planned for CodeTint:
 
 ---
 
-```
-
-```
+# License
