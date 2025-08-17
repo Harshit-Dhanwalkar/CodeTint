@@ -79,8 +79,12 @@ void display_page(char **lines) {
     if (g_total_lines == 0) percent = 0;
     if (end_line == g_total_lines) percent = 100;
     
-    printf("\033[7m-- MORE -- (%d%%) Press 'q' to quit, 'space' or 'f' for next page, 'b' for prev.\033[0m\n", percent);
-    fflush(stdout);
+    if (end_line == g_total_lines) {
+        printf("\033[7m-- END -- (%d%%) Press 'q' to quit, 'b' for prev.\033[0m\n", percent);
+    } else {
+        printf("\033[7m-- MORE -- (%d%%) Press 'q' to quit, 'space' or 'f' for next page, 'b' for prev.\033[0m\n", percent);
+    }
+   fflush(stdout);
 }
 
 // Signal handler for terminal resize
@@ -125,7 +129,7 @@ void run_pager(char **lines, int total_lines) {
 
         if (g_current_line < 0) g_current_line = 0;
         if (g_current_line >= g_total_lines) g_current_line = g_total_lines > 0 ? g_total_lines - 1 : 0;
-        
+
         // Re-display the page after a key press
         display_page(lines);
     }
